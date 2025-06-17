@@ -43,21 +43,10 @@ y <- rnorm(n, mean = mu[components], sd = 1)
 est_model <- BNPmix::PYdensity(y = y,
                                mcmc = list(niter = 6000,
                                            nburn = 5000,
-                                           model = "LS"),
+                                           model = "LS",
+                                           print_message = FALSE),
                                output = list(out_type = "FULL", 
                                              out_param = TRUE))
-#> Completed:   600/6000 - in 0.09202 sec
-#> Completed:   1200/6000 - in 0.187285 sec
-#> Completed:   1800/6000 - in 0.283321 sec
-#> Completed:   2400/6000 - in 0.377232 sec
-#> Completed:   3000/6000 - in 0.453758 sec
-#> Completed:   3600/6000 - in 0.562026 sec
-#> Completed:   4200/6000 - in 0.668807 sec
-#> Completed:   4800/6000 - in 0.777227 sec
-#> Completed:   5400/6000 - in 0.885569 sec
-#> Completed:   6000/6000 - in 0.98883 sec
-#> 
-#> Estimation done in 0.988886 seconds
 cls.draw = est_model$clust
 psm=mcclust::comp.psm(cls.draw+1)
 out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,

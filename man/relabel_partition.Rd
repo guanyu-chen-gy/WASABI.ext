@@ -17,7 +17,7 @@ Change cluster labels so that they are ordered from 1 to K,
 where K is the number of clusters in the partition.
 }
 \examples{
-{
+\dontrun{
 # assuming cls.draw is a matrix of size S x n, 
 # where S is the number of samples and n is the sample size
 # i.e. each row contains a partition of n data points

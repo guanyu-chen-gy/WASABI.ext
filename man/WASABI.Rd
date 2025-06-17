@@ -87,7 +87,7 @@ The VI-search step can rely on different algorithms for finding the minEVI parti
 }
 }
 \examples{
-\donttest{
+\dontrun{
 set.seed(123)
 mu <- c(-1.1, 1.1)
 prop <- c(0.5, 0.5)
@@ -100,7 +100,7 @@ est_model <- BNPmix::PYdensity(y = y,
                                            model = "LS"),
                                output = list(out_type = "FULL", out_param = TRUE))
 cls.draw = est_model$clust
-psm=mcclust::comp.psm(cls.draw)
+psm=mcclust::comp.psm(cls.draw+1)
 # if running WASABI once, a non-random initialization is recommended, such as "topvi" or "average"
 out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso")
 

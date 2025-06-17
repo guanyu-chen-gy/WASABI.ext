@@ -9,7 +9,8 @@
 #' @returns A vector of the same size as \code{c}, where each cluster label is replaced with a number from 1 to K, where K is the number of unique clusters in \code{c}.
 #' @export
 #'
-#' @examples{
+#' @examples
+#' \dontrun{
 #' # assuming cls.draw is a matrix of size S x n, 
 #' # where S is the number of samples and n is the sample size
 #' # i.e. each row contains a partition of n data points
@@ -34,11 +35,11 @@ relabel_partition <- function(c) {
 #' @param config A matrix of size \code{S} x \code{n}, where each row represents a sample configuration.
 #'
 #' @returns A list containing:
-#' \begin{itemize}
+#' \itemize{
 #' \item \code{config_reorder} A matrix of size \code{S} x \code{n}, where each row represents a reordered sample configuration.
 #' \item \code{config_count} A vector containing the count of each unique configuration (number of times each configuration in config_reorder appears in the original config.
 #' \item \code{config_index} A vector containing the indices of unique configurations.
-#' \end{itemize}
+#' }
 #'
 reorder_find_unique <- function(S, n, config) {
   # Initialize output
@@ -77,10 +78,10 @@ reorder_find_unique <- function(S, n, config) {
 ## -- currently not used --
 
 sample_max_jit <- function(pr, quant = 0.95) {
-  q95 <- quantile(pr, prob = quant)
+  q95 <- stats::quantile(pr, prob = quant)
   ind <- which(pr > q95)
   pr0 <- pr[ind]
-  jit <- rnorm(length(pr0)) * diff(range(pr0)) / 2
+  jit <- stats::rnorm(length(pr0)) * diff(range(pr0)) / 2
   pr1 <- pr0 + jit
   return(ind[which.max(pr1)])
 }

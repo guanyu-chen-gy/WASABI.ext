@@ -9,7 +9,7 @@ WD(cls.draw, part, part.weights, assign.vi)
 \arguments{
 \item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points.}
 
-\item{part}{The WASABI particles. A matrix of dimension $L \times n$ containing the particles obtained by WASABI in each of the rows.}
+\item{part}{The WASABI particles. A matrix of dimension $L × n$ containing the particles obtained by WASABI in each of the rows.}
 
 \item{part.weights}{A vector of length $L$ containing the weights associated to each of the particles.}
 

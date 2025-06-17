@@ -22,7 +22,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
   for (l in 1:L) {
     if (counts[l] == 0) {
       ind <- (assign.vi %in% c(1:L)[counts > 1]) # "counts>1" is to avoid some group becoming empty!
-      m <- which(rmultinom(1, 1, viall[ind, l] / sum(viall[ind, l])) == 1)
+      m <- which(stats::rmultinom(1, 1, viall[ind, l] / sum(viall[ind, l])) == 1)
       l_old <- (assign.vi[ind])[m]
       assign.vi[ind][m] <- l
       counts[l] <- 1
@@ -224,8 +224,8 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
 minVI_hclust <- function(cls.draw_relab, Ks.draw,
                          psm, method,
                          max.k, lb, L = 1) {
-  hclust_K <- hclust(as.dist(1 - psm), method = method)
-  cls.hclust <- t(apply(matrix(1:max.k), 1, function(x) cutree(hclust_K, k = x)))
+  hclust_K <- stats::hclust(stats::as.dist(1 - psm), method = method)
+  cls.hclust <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust_K, k = x)))
   if (lb) {
     VI.hclust <- mcclust.ext::VI.lb(cls.hclust, psm)
   } else {

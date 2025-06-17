@@ -15,11 +15,11 @@ reorder_find_unique(S, n, config)
 }
 \value{
 A list containing:
-\begin{itemize}
+\itemize{
 \item \code{config_reorder} A matrix of size \code{S} x \code{n}, where each row represents a reordered sample configuration.
 \item \code{config_count} A vector containing the count of each unique configuration (number of times each configuration in config_reorder appears in the original config.
 \item \code{config_index} A vector containing the indices of unique configurations.
-\end{itemize}
+}
 }
 \description{
 Reorder cluster labels in a collection of samples, so that cluster labels appear as 1,2,3,.. and to make

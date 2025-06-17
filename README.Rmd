@@ -49,7 +49,8 @@ y <- rnorm(n, mean = mu[components], sd = 1)
 est_model <- BNPmix::PYdensity(y = y,
                                mcmc = list(niter = 6000,
                                            nburn = 5000,
-                                           model = "LS"),
+                                           model = "LS",
+                                           print_message = FALSE),
                                output = list(out_type = "FULL", 
                                              out_param = TRUE))
 cls.draw = est_model$clust

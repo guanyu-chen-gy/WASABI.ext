@@ -114,7 +114,7 @@ The recommended method is \code{"salso"}, as it is the most accurate while remai
 In case of larger datasets, it is recommended to use method \code{"average"}, or the \code{mini.batch} argument to speed up the algorithm.
 }
 \examples{
-\donttest{
+\dontrun{
 set.seed(123)
 mu <- c(-1.1, 1.1)
 prop <- c(0.5, 0.5)
@@ -127,7 +127,7 @@ est_model <- BNPmix::PYdensity(y = y,
                                            model = "LS"),
                                output = list(out_type = "FULL", out_param = TRUE))
 cls.draw = est_model$clust
-psm=mcclust::comp.psm(cls.draw)
+psm=mcclust::comp.psm(cls.draw+1)
 # if running WASABI once, a non-random initialization is recommended, such as "topvi" or "average"
 out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, multi.start = 10, 
                                 method.init = "++", method = "salso")
@@ -139,9 +139,6 @@ out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, multi.start = 10,
                                 
 # Parallel processing is currently supported only on MacOS and Linux systems. 
 # To activate it, set ncores > 1. If you are using Windows, set ncores = 1.
-out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, 
-                                ncores = 3, multi.start = 20,
-                                method.init = "topvi", method = "salso")
 }
 }
 \seealso{

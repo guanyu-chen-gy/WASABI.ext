@@ -67,7 +67,7 @@
 #' @export
 #' 
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' set.seed(123)
 #' mu <- c(-1.1, 1.1)
 #' prop <- c(0.5, 0.5)
@@ -282,13 +282,13 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
       tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
       vi.init <- apply(tmp, 1, min)
-      ik <- which(rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+      ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
       # ik = sample_max_jit(vi.init)
       ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-      # tau = 1; ik = which(rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+      # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
       # jit = 0.0001
       # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-      # ik = which(rmultinom(1, 1, prob) == 1)
+      # ik = which(stats::rmultinom(1, 1, prob) == 1)
       part[k, ] <- cls.draw.thin[ik, ]
       K.part <- c(K.part, max(part[k, ]) + 1)
     }
@@ -326,14 +326,14 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
 
     # add the partitions from hierarchical clustering
     # if(is.null(max.k)) max.k <- ceiling(sqrt(n)) # ceiling(n/8)
-    hclust.comp <- hclust(as.dist(1 - psm), method = "complete")
-    cls.comp <- t(apply(matrix(1:max.k), 1, function(x) cutree(hclust.comp, k = x)))
+    hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "complete")
+    cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
     cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
     Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
     S.thin <- S.thin + max.k
 
-    hclust.comp <- hclust(as.dist(1 - psm), method = "average")
-    cls.comp <- t(apply(matrix(1:max.k), 1, function(x) cutree(hclust.comp, k = x)))
+    hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "average")
+    cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
     cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
     Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
     S.thin <- S.thin + max.k
@@ -355,13 +355,13 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
       tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
       vi.init <- apply(tmp, 1, min)
-      ik <- which(rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+      ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
       # ik = sample_max_jit(vi.init)
       ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-      # tau = 1; ik = which(rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+      # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
       # jit = 0.0001
       # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-      # ik = which(rmultinom(1, 1, prob) == 1)
+      # ik = which(stats::rmultinom(1, 1, prob) == 1)
       part[k, ] <- cls.draw.thin[ik, ]
       K.part <- c(K.part, max(part[k, ]) + 1)
     }

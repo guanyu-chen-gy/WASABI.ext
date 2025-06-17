@@ -9,7 +9,7 @@ EVI_Rcpp(cls, cls.draw, Ks, Ks.draw)
 \arguments{
 \item{cls}{A vector containing the cluster assignments of $n$ data points, representing the partition with respect to which the EVI is computed.}
 
-\item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points, of dimensions $S \times n$, where $S$ is the number of MCMC samples.}
+\item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points, of dimensions $S × n$, where $S$ is the number of MCMC samples.}
 
 \item{Ks}{The number of clusters in \code{cls}}
 

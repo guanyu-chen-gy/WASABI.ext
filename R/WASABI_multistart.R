@@ -86,7 +86,7 @@
 #' @export
 #' 
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' set.seed(123)
 #' mu <- c(-1.1, 1.1)
 #' prop <- c(0.5, 0.5)
