@@ -139,6 +139,9 @@ out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, multi.start = 10,
                                 
 # Parallel processing is currently supported only on MacOS and Linux systems. 
 # To activate it, set ncores > 1. If you are using Windows, set ncores = 1.
+out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, 
+                                ncores = 3, multi.start = 20,
+                                method.init = "topvi", method = "salso")
 }
 }
 \seealso{
