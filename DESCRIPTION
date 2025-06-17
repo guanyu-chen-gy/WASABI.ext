@@ -1,0 +1,25 @@
+Package: WASABI
+Type: Package
+Title: WASserstein Approximation for Bayesian clusterIng
+Version: 1.0
+Date: 2025-06-03
+Authors@R: c(
+    person("Cecilia", "Balocchi", role = c("aut", "cre"), email = "cecilia.balocchi@ed.ac.uk"), 
+    person("Sara", "Wade", role = "aut", email = "sara.wade@ed.ac.uk")
+  )
+Description: WASABI provides a tool for summarizing the posterior distribution over clusterings in Bayesian mixture models. The package implements the Wasserstein Approximation for Bayesian clustering (WASABI) algorithm, which identifies multiple representative partitions (“particles”) that capture posterior uncertainty, by finding an approximation of the posterior that minimizes the Wasserstein distance based on the Variation of Information (VI) distance.
+License: MIT + file LICENSE
+Imports: 
+    mcclust,
+    Rcpp (>= 1.0.14),
+    salso
+LinkingTo: Rcpp
+RoxygenNote: 7.3.2
+Encoding: UTF-8
+Suggests: 
+    ggplot2,
+    GreedyEPL,
+    mcclust.ext,
+    parallel,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
