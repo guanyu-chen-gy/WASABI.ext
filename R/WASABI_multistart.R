@@ -99,7 +99,7 @@
 #'                                            model = "LS"),
 #'                                output = list(out_type = "FULL", out_param = TRUE))
 #' cls.draw = est_model$clust
-#' psm=mcclust::comp.psm(cls.draw)
+#' psm=mcclust::comp.psm(cls.draw+1)
 #' # if running WASABI once, a non-random initialization is recommended, such as "topvi" or "average"
 #' out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, multi.start = 10, 
 #'                                 method.init = "++", method = "salso")

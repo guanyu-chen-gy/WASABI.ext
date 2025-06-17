@@ -84,7 +84,7 @@
 #'                                            model = "LS"),
 #'                                output = list(out_type = "FULL", out_param = TRUE))
 #' cls.draw = est_model$clust
-#' psm=mcclust::comp.psm(cls.draw)
+#' psm=mcclust::comp.psm(cls.draw+1)
 #' WASABI_elbow <- elbow(cls.draw, psm = psm)
 #' plot(WASABI_elbow$wass_vec, type = "b")
 #' }
