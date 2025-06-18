@@ -25,32 +25,124 @@ You can install the development version of WASABI from
 devtools::install_github("cecilia-balocchi/WASABI")
 ```
 
-## Example
-
-This is a basic example which shows you how to solve a common problem:
+## Examples
 
 ``` r
 library(WASABI)
+```
 
-set.seed(123)
+#### Univariate data
+
+Let’s first consider a simple bimodal (univariate) example:
+
+``` r
+set.seed(12345)
 mu <- c(-1.1, 1.1)
 prop <- c(0.5, 0.5)
-n <- 300
+n <- 600
 components <- sample(1:2, size = n, replace = TRUE, prob = prop)
 y <- rnorm(n, mean = mu[components], sd = 1)
-# fit a Bayesian mixture model
-# (can use your own code, or a package such as BNPmix)
+hist(y)
+```
+
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+
+We fit a Bayesian mixture model (you can use your own code, or a package
+such as BNPmix):
+
+``` r
 est_model <- BNPmix::PYdensity(y = y,
                                mcmc = list(niter = 6000,
                                            nburn = 5000,
                                            model = "LS",
                                            print_message = FALSE),
-                               output = list(out_type = "FULL", 
+                               output = list(out_type = "FULL",
                                              out_param = TRUE))
 cls.draw = est_model$clust
+z_minVI <- salso::salso(cls.draw)
+table(z_minVI)
+#> z_minVI
+#>   1 
+#> 600
+```
+
+The minVI estimator is the partition with one cluster.
+
+``` r
 psm=mcclust::comp.psm(cls.draw+1)
+superheat::superheat(psm,
+                     pretty.order.cols = TRUE,
+                     pretty.order.rows = TRUE)
+```
+
+<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+
+However the posterior similarity matrix shows a clear two-cluster
+pattern, with moderate posterior uncertainty. Let’s use WASABI to
+summarize the posterior with multiple point estimates:
+
+``` r
 out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,
                      method.init = "topvi", method = "salso")
 ```
+
+To explore multiple initializations, we can use `WASABI_multistart`. We
+can also use the `mini.batch` option, to run the algorithm on a subset
+of the data (for example: 150). When using `mini.batch` it’s advisable
+to reduce the number of `max.iter` (for example to 10) and allow a small
+number of `extra.iter` that are run with the full dataset after the
+mini-batch part. This allows to allocate each MCMC sample in `cls.draw`
+to one of the particles/regions of attractions, and for the algorithm to
+stabilize after using mini-batch.
+
+Note, the multi-core option relies on `parallel::mclapply` which only
+works on MacOS and Linux. When running `WASABI_multistart` on Windows
+machines, set `ncores = 1` (which is also the default).
+
+``` r
+out_WASABI_ms <- WASABI_multistart(cls.draw, psm = psm, L = 2,
+                                   multi.start = 20, ncores = 4,
+                                   mini.batch = 150,
+                                   max.iter = 10, extra.iter = 4,
+                                   method.init = "++", method = "salso")
+```
+
+We should use the solution achieving the smallest Wasserstein distance
+(`wass.dist`):
+
+``` r
+if(out_WASABI_ms$wass.dist < out_WASABI$wass.dist){
+  out_WASABI <- out_WASABI_ms
+}
+```
+
+We can now visualize the particles, and there are different options:
+
+- visualize the weight for each particle and their number of clusters
+
+``` r
+ggsummary(out_WASABI)
+```
+
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+
+- visualize the the range for each particle’s cluster, side by side with
+  the histogram of the data:
+
+``` r
+ggrange_hist(out_WASABI, y)
+#> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+
+- visualize the data with the particles’ cluster assignment, as a
+  scatterplot (by adding some jitter in the y-axis):
+
+``` r
+ggscatter_grid(out_WASABI, y)
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 <!-- You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. -->
