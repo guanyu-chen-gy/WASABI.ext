@@ -15,6 +15,10 @@ with a discrete distribution supported on these $L$ point estimates
 (called ‘particles’) in a Wasserstein sense (the Wasserstein
 distribution is based on the Variation of Information (VI) distance).
 
+**Reference:** Balocchi, C., & Wade, S. (2025). Understanding
+uncertainty in Bayesian cluster analysis. [arXiv preprint
+arXiv:2506.16295](https://arxiv.org/abs/2506.16295v1).
+
 ## Installation
 
 You can install the development version of WASABI from
@@ -31,13 +35,7 @@ devtools::install_github("cecilia-balocchi/WASABI")
 library(WASABI)
 library(BNPmix)
 library(mcclust)
-#> Loading required package: lpSolve
 library(salso)
-#> 
-#> Attaching package: 'salso'
-#> The following object is masked from 'package:mcclust':
-#> 
-#>     binder
 library(superheat)
 library(ggplot2)
 ```
@@ -221,18 +219,18 @@ est_model <- BNPmix::PYdensity(y = Y,
                          strength = alpha,
                          discount = 0),
                        output = list(out_type = "FULL", out_param = TRUE))
-#> Completed:   1100/11000 - in 0.482553 sec
-#> Completed:   2200/11000 - in 0.942972 sec
-#> Completed:   3300/11000 - in 1.39894 sec
-#> Completed:   4400/11000 - in 1.84403 sec
-#> Completed:   5500/11000 - in 2.32142 sec
-#> Completed:   6600/11000 - in 2.80381 sec
-#> Completed:   7700/11000 - in 3.22138 sec
-#> Completed:   8800/11000 - in 3.71625 sec
-#> Completed:   9900/11000 - in 4.18513 sec
-#> Completed:   11000/11000 - in 4.82365 sec
+#> Completed:   1100/11000 - in 0.478067 sec
+#> Completed:   2200/11000 - in 0.939248 sec
+#> Completed:   3300/11000 - in 1.39589 sec
+#> Completed:   4400/11000 - in 1.84335 sec
+#> Completed:   5500/11000 - in 2.32279 sec
+#> Completed:   6600/11000 - in 2.80815 sec
+#> Completed:   7700/11000 - in 3.22682 sec
+#> Completed:   8800/11000 - in 3.7245 sec
+#> Completed:   9900/11000 - in 4.19597 sec
+#> Completed:   11000/11000 - in 4.83649 sec
 #> 
-#> Estimation done in 4.82371 seconds
+#> Estimation done in 4.83655 seconds
 cls.draw = est_model$clust
 psm=mcclust::comp.psm(cls.draw+1)
 ```
@@ -281,8 +279,6 @@ out_elbow <- elbow(cls.draw, L_max = 6, psm = psm,
 #> Warning in salso::salso(x = cls.draw_relab[assign.vi == l, ]): The number of
 #> clusters equals the default maximum possible number of clusters.
 #> Completed  5 / 6
-#> Warning in salso::salso(x = cls.draw_relab[assign.vi == l, ]): The number of
-#> clusters equals the default maximum possible number of clusters.
 #> Warning in salso::salso(x = cls.draw_relab[assign.vi == l, ]): The number of
 #> clusters equals the default maximum possible number of clusters.
 #> Completed  6 / 6

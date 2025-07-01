@@ -22,6 +22,8 @@ The goal of WASABI is to summarize the posterior distribution over the space of
 partitions obtained after running a Bayesian mixture model. It summarizes the posterior using several point estimates. These are identified by approximating 
 the empirical posterior distribution (comprised by the posterior MCMC draws over the space of partitions) with a discrete distribution supported on these $L$ point estimates (called 'particles') in a Wasserstein sense (the Wasserstein distribution is based on the Variation of Information (VI) distance).
 
+**Reference:** Balocchi, C., & Wade, S. (2025). Understanding uncertainty in Bayesian cluster analysis. [arXiv preprint arXiv:2506.16295](https://arxiv.org/abs/2506.16295v1). 
+
 ## Installation
 
 You can install the development version of WASABI from [GitHub](https://github.com/) with:
@@ -33,7 +35,7 @@ devtools::install_github("cecilia-balocchi/WASABI")
 
 ## Examples
 
-```{r}
+```{r message = FALSE}
 library(WASABI)
 library(BNPmix)
 library(mcclust)
