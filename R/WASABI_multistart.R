@@ -14,11 +14,11 @@
 #'                   add_topvi = TRUE,
 #'                   lb = FALSE, thin.init = NULL, part.init = NULL,
 #'                   method = c("average", "complete", "greedy", "salso"),
-#'                   max.k = NULL, L = 10, max.iter = 100, eps = 0.0001, mini.batch = 0,
+#'                   max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
 #'                   extra.iter = NULL,
 #'                   swap_countone = FALSE,
 #'                   suppress.comment = TRUE,
-#'                   return_psm = TRUE, seed = NULL)
+#'                   return_psm = FALSE, seed = NULL)
 #'
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
@@ -120,11 +120,11 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                               add_topvi = TRUE,
                               lb = FALSE, thin.init = NULL, part.init = NULL,
                               method = c("average", "complete", "greedy", "salso"),
-                              max.k = NULL, L = 10, max.iter = 100, eps = 0.0001, mini.batch = 0,
+                              max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
                               extra.iter = NULL,
                               swap_countone = FALSE,
                               suppress.comment = TRUE,
-                              return_psm = TRUE, seed = NULL) {
+                              return_psm = FALSE, seed = NULL) {
   if (!is.null(seed)) {
     if (length(seed) == 1) {
       RNGkind("L'Ecuyer-CMRG")
@@ -159,6 +159,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
       mini.batch, extra.iter,
       swap_countone,
       suppress.comment,
+      return_psm,
       seed = NULL
     )
     return(out)

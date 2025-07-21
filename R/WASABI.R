@@ -13,9 +13,9 @@
 #'                        "random_partition", "+++", "topvi"),
 #'        lb = FALSE, thin.init = NULL, part.init = NULL,
 #'        method = c("average", "complete", "greedy", "salso"),
-#'        max.k = NULL, L = 10, max.iter = 100, eps = 0.0001, mini.batch = 0,
+#'        max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
 #'        extra.iter = NULL,swap_countone = FALSE,suppress.comment = TRUE,
-#'        return_psm = TRUE,seed = NULL)
+#'        return_psm = FALSE,seed = NULL)
 #' 
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
 #' @param psm The posterior similarity matrix obtained from MCMC samples of partitions stored in \code{cls.draw}.
@@ -75,7 +75,7 @@
 #' components <- sample(1:2, size = n, replace = TRUE, prob = prop)
 #' y <- rnorm(n, mean = mu[components], sd = 1)
 #' est_model <- BNPmix::PYdensity(y = y,
-#'                                mcmc = list(niter = 6000,
+#'                                mcmc = list(niter = 15000,
 #'                                            nburn = 5000,
 #'                                            model = "LS"),
 #'                                output = list(out_type = "FULL", out_param = TRUE))
@@ -92,11 +92,11 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
                    method.init = c("average", "complete", "fixed", "++", "random_partition", "+++", "topvi"),
                    lb = FALSE, thin.init = NULL, part.init = NULL,
                    method = c("average", "complete", "greedy", "salso"),
-                   max.k = NULL, L = 10, max.iter = 100, eps = 0.0001, mini.batch = 0,
+                   max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
                    extra.iter = NULL,
                    swap_countone = FALSE,
                    suppress.comment = TRUE,
-                   return_psm = TRUE,
+                   return_psm = FALSE,
                    seed = NULL) {
   method.init <- match.arg(method.init, choices = method.init)
   method <- match.arg(method, choices = method)
@@ -146,9 +146,9 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
   part <- matrix(0, L, n)
   part.evi <- rep(0, L)
 
-  if (is.null(max.k)) max.k <- min(max(Ks.draw) + 10, ceiling(sqrt(n)))
+  if (is.null(max.k)) max.k <- (max(Ks.draw) + 10)
   if (max.k < L) max.k <- L
-  if (is.null(extra.iter)) extra.iter <- 1 # used only if mini.batch > 0
+  if (is.null(extra.iter)) extra.iter <- 3 # used only if mini.batch > 0
   if ((extra.iter == 0) & (mini.batch > 0)) {
     extra.iter <- 1
     warning("Override: extra.iter is set to 1, as it needs to be larger than 0.")
@@ -210,7 +210,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
     if (suppress.comment == FALSE & method.init != "topvi") {
       cat(paste(
         paste0("Initial particle ", c(1:L)),
-        paste0(": number of clusters=", apply(part, 1, max)),
+        paste0(": number of clusters = ", apply(part, 1, max)),
         paste0(", EVI = ", round(part.evi, 3)), "\n"
       ))
     }
@@ -233,7 +233,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
     if (suppress.comment == FALSE & method.init != "topvi") {
       cat(paste(
         paste0("Initial particle ", c(1:L)),
-        paste0(": number of clusters=", apply(part, 1, max)),
+        paste0(": number of clusters = ", apply(part, 1, max)),
         paste0(", EVI = ", round(part.evi, 3)), "\n"
       ))
     }
@@ -241,22 +241,22 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
 
   if (method.init == "fixed" | (method.init == "topvi" & !is.null(part.init))) {
     if (lb) {
-      VI.avg <- mcclust.ext::VI.lb(part.init, psm)
+      VI.fxd <- mcclust.ext::VI.lb(part.init, psm)
     } else {
       part.init_relab <- t(apply(part.init, 1, relabel_partition)) - 1
-      Ks.avg <- apply(part.init_relab, 1, function(x) max(x)) + 1
-      VI.avg <- sapply(
+      Ks.fxd <- apply(part.init_relab, 1, function(x) max(x)) + 1
+      VI.fxd <- sapply(
         1:L,
         function(i) {
           EVI_Rcpp(
             cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-            Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+            Ks = Ks.fxd[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
           )
         }
       )
     }
     part <- part.init
-    part.evi <- VI.avg
+    part.evi <- VI.fxd
     if (method.init == "topvi") {
       part_all <- rbind(part_all, part)
       part.evi_all <- c(part.evi_all, part.evi)
@@ -265,7 +265,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
     if (suppress.comment == FALSE & method.init != "topvi") {
       cat(paste(
         paste0("Initial particle ", c(1:L)),
-        paste0(": number of clusters=", apply(part, 1, max)),
+        paste0(": number of clusters = ", apply(part, 1, max)),
         paste0(", EVI = ", round(part.evi, 3)), "\n"
       ))
     }
@@ -293,20 +293,20 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       K.part <- c(K.part, max(part[k, ]) + 1)
     }
     if (lb) {
-      VI.avg <- mcclust.ext::VI.lb(part, psm)
+      VI.pp <- mcclust.ext::VI.lb(part, psm)
     } else {
-      Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-      VI.avg <- sapply(
+      Ks.pp <- apply(part, 1, function(x) max(x)) + 1
+      VI.pp <- sapply(
         1:L,
         function(i) {
           EVI_Rcpp(
             cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-            Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+            Ks = Ks.pp[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
           )
         }
       )
     }
-    part.evi <- VI.avg
+    part.evi <- VI.pp
     part <- part + 1
     if (suppress.comment == FALSE) {
       cat(paste(
@@ -366,20 +366,20 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       K.part <- c(K.part, max(part[k, ]) + 1)
     }
     if (lb) {
-      VI.avg <- mcclust.ext::VI.lb(part, psm)
+      VI.ppp <- mcclust.ext::VI.lb(part, psm)
     } else {
-      Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-      VI.avg <- sapply(
+      Ks.ppp <- apply(part, 1, function(x) max(x)) + 1
+      VI.ppp <- sapply(
         1:L,
         function(i) {
           EVI_Rcpp(
             cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-            Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+            Ks = Ks.ppp[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
           )
         }
       )
     }
-    part.evi <- VI.avg
+    part.evi <- VI.ppp
     # let's bring them back to 1-index
     part <- part + 1
     if (suppress.comment == FALSE) {
