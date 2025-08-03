@@ -210,7 +210,7 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
-          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = binder())
+          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = binder(), maxNClusters = 10,maxZealousAttempts = 1000)
           part_new[l, ] <- as.numeric(output_salso)
           part.evi_new[l] <- as.numeric(attr(output_salso, "info")[4])
         }

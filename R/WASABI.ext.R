@@ -211,7 +211,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
       }
       if (method == "salso") {
         output_salso <- salso::salso(x = cls.draw_relab, loss = binder(), 
-                                     maxNClusters = n/2,maxZealousAttempts = 1000)
+                                     maxNClusters = 10,maxZealousAttempts = 1000)
         part[L, ] <- as.numeric(output_salso)
         part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
       }
