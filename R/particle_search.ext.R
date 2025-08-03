@@ -210,7 +210,7 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
-          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ])
+          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = binder())
           part_new[l, ] <- as.numeric(output_salso)
           part.evi_new[l] <- as.numeric(attr(output_salso, "info")[4])
         }
@@ -468,9 +468,8 @@ minB_hclust <- function(cls.draw_relab, Ks.draw,
                         max.k, lb, L = 1) {
   hclust_K <- stats::hclust(stats::as.dist(1 - psm), method = method)
   cls.hclust <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust_K, k = x)))
-  ##--------------------------------------------------------------------------------------------------
   if (lb) {
-    VI.hclust <- mcclust.ext::VI.lb(cls.hclust, psm)
+            stop("lb option is not available for Binder loss")
   } else {
     cls.hclust_relab <- t(apply(cls.hclust, 1, relabel_partition)) - 1
     Ks.hclust <- apply(cls.hclust_relab, 1, function(x) max(x)) + 1
