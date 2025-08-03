@@ -132,3 +132,22 @@ vi.contribution <- function(Z1, Z2) {
   }
   base::unlist(base::lapply(seq_len(n), vi.i, Z1 = Z1, Z2 = Z2))
 }
+
+#' Binder contribution between two partitions
+#'
+#' Calculates the individual contributions of observations to the Binder distance between partitions Z1 and Z2.
+#'
+#' @param Z1 Integer or factor vector: length-n cluster labels for partition 1.
+#' @param Z2 Integer or factor vector: length-n cluster labels for partition 2.
+#' @return Numeric vector of length n: VI contribution for each observation.
+#' @export
+binder.contribution <- function(Z1, Z2) {
+  n <- base::length(Z1)
+  vi.i <- function(i, Z1, Z2) {
+    c <- 1 / n * log2(base::sum(Z1 == Z1[i]) / n) +
+      1 / n * log2(base::sum(Z2 == Z2[i]) / n) -
+      2 / n * log2(base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)
+    c
+  }
+  base::unlist(base::lapply(seq_len(n), vi.i, Z1 = Z1, Z2 = Z2))
+}
