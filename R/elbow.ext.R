@@ -104,7 +104,9 @@ elbow.ext <- function(cls.draw, L_max = 10, psm = NULL,
   if (is.null(mini.batch) == TRUE) {
     mini.batch <- round(nrow(cls.draw) / 5)
   }
-  
+  if (lb == TRUE & loss == "Binder"){
+    warning("lower bound is not applied for Binder loss")
+  }
   output_list <- list()
   wass_vec <- numeric(L_max)
   if (loss == "VI"){
@@ -129,7 +131,7 @@ elbow.ext <- function(cls.draw, L_max = 10, psm = NULL,
       output_wvi <- WASABI_multistart.ext(cls.draw, psm,
                                           multi.start = multi.start, ncores = ncores,
                                           method.init = method.init, add_topvi = add_topvi,
-                                          lb = lb, thin.init = thin.init, part.init = part.init,
+                                          lb = FALSE, thin.init = thin.init, part.init = part.init,
                                           method = method, max.k = max.k, L = ell,
                                           max.iter = max.iter, eps = eps,
                                           mini.batch = mini.batch, extra.iter = extra.iter,
