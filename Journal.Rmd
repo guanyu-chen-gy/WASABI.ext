@@ -409,3 +409,7 @@ out_WASABI <- WASABI.ext(cls.draw, psm = psm, L = 2,
   In salso::salso(x = cls.draw_relab, loss = binder()) :
   The number of possible zealous attempts exceeded the maximum. Do you really want that many clusters? Consider lowering 'maxNClusters' or increasing 'maxZealousAttempts'.
   
+  
+## Salso
+By running WASABI.ext step by step, the problem comes from R:#781 where the "while loop" break down.
+
