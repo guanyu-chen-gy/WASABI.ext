@@ -146,8 +146,33 @@ binder.contribution <- function(Z1, Z2) {
   vi.i <- function(i, Z1, Z2) {
     c <- (base::sum(Z1 == Z1[i]) / n)^2 +
       log2(base::sum(Z2 == Z2[i]) / n)^2 -
-      2 (base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)^2
+      2 * (base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)^2
     c
   }
   base::unlist(base::lapply(seq_len(n), vi.i, Z1 = Z1, Z2 = Z2))
 }
+
+#' CExpected Binder Contribution (WASABI approximation)
+#'
+#' Calculates the EB contribution (with expectation taken with respect to the WASABI distribution) of each observation.
+#'
+#' @param output_wvi List: must contain \code{particles} (matrix) and \code{part.weights} (numeric vector).
+#' @param Zhat Integer vector: partition to compare.
+#' @return Numeric vector of length n: weighted expected VI contribution for \code{Zhat} (each element).
+#' @export
+evi.wd.contribution <- function(output_wvi, Zhat) {
+  n <- base::length(Zhat)
+  evi.i <- function(i, Zmat, Zhat, w) {
+    c <-  (base::sum(Zhat == Zhat[i]) / n)^2 +
+      base::sum(w * base::apply(Zmat, 1, function(x) {
+        (base::sum(x == x[i]) / n)^2
+      })) -
+       2 * base::sum(w * base::apply(Zmat, 1, function(x, y) {
+        (base::sum((x == x[i]) & (y == y[i])) / n)^2
+      }, y = Zhat))
+    c
+  }
+  base::unlist(base::lapply(seq_len(n), evi.i, Zmat = output_wvi$particles, Zhat = Zhat, w = output_wvi$part.weights))
+}
+
+
