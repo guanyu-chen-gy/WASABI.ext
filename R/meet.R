@@ -144,9 +144,9 @@ vi.contribution <- function(Z1, Z2) {
 binder.contribution <- function(Z1, Z2) {
   n <- base::length(Z1)
   vi.i <- function(i, Z1, Z2) {
-    c <- 1 / n * log2(base::sum(Z1 == Z1[i]) / n) +
-      1 / n * log2(base::sum(Z2 == Z2[i]) / n) -
-      2 / n * log2(base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)
+    c <- (base::sum(Z1 == Z1[i]) / n)^2 +
+      log2(base::sum(Z2 == Z2[i]) / n)^2 -
+      2 (base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)^2
     c
   }
   base::unlist(base::lapply(seq_len(n), vi.i, Z1 = Z1, Z2 = Z2))
