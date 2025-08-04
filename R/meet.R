@@ -160,7 +160,7 @@ binder.contribution <- function(Z1, Z2) {
 #' @param Zhat Integer vector: partition to compare.
 #' @return Numeric vector of length n: weighted expected VI contribution for \code{Zhat} (each element).
 #' @export
-evi.wd.contribution <- function(output_wvi, Zhat) {
+eb.wd.contribution <- function(output_wvi, Zhat) {
   n <- base::length(Zhat)
   evi.i <- function(i, Zmat, Zhat, w) {
     c <-  (base::sum(Zhat == Zhat[i]) / n)^2 +
@@ -175,4 +175,26 @@ evi.wd.contribution <- function(output_wvi, Zhat) {
   base::unlist(base::lapply(seq_len(n), evi.i, Zmat = output_wvi$particles, Zhat = Zhat, w = output_wvi$part.weights))
 }
 
-
+#' Expected Binder Contribution
+#'
+#' Calculates the EB contribution of each observation to the expected Binder distance between a partition and samples.
+#'
+#' @param Zmat Integer matrix: S rows (samples) by n columns (data points), each row a clustering.
+#' @param Zhat Integer vector: length-n partition to compare.
+#' @return Numeric vector of length n: expected VI contribution for \code{Zhat} (each element).
+#' @export
+eb.contribution <- function(Zmat, Zhat) {
+  n <- base::length(Zhat)
+  S <- base::dim(Zmat)[1]
+  evi.i <- function(i, Zmat, Zhat) {
+    c <- (base::sum(Zhat == Zhat[i]) / n)^2 +
+      base::sum(base::apply(Zmat, 1, function(x) {
+         (base::sum(x == x[i]) / n)^2
+      })) / S -
+      2  * base::sum(base::apply(Zmat, 1, function(x, y) {
+        (base::sum((x == x[i]) & (y == y[i])) / n)^2
+      }, y = Zhat)) / S
+    c
+  }
+  base::unlist(base::lapply(seq_len(n), evi.i, Zmat = Zmat, Zhat = Zhat))
+}
