@@ -666,39 +666,39 @@ superheat::superheat(psm.m,
 We can also look at the VI contribution of each point when comparing two partitions (e.g. particle 2 and particle 3):
 
 ```{r}
-VIC_23 = vi.contribution(output_WASABI$particles[2,],output_WASABI$particles[3,])
+BC_23 = binder.contribution(output_WASABI$particles[2,],output_WASABI$particles[3,])
 
 ggplot() +
   geom_point(aes(x = Y[,1],
                  y = Y[,2],
-                 color = VIC_23,
+                 color = BC_23,
                  shape = as.factor(z_meet))) +
   theme_bw() +
-  scale_color_distiller(name = "VIC",palette = "OrRd",direction = 1)+
+  scale_color_distiller(name = "BC",palette = "OrRd",direction = 1)+
   guides(shape = guide_legend(title="Meet\ncluster")) +
   xlab(expression("x"[1])) + ylab(expression("x"[2])) +
-  ggtitle("VI Contribution between particle 2 and 3")
+  ggtitle("Binder Contribution between particle 2 and 3")
 ```
 
-Or we can inspect the Expected VI (EVI) for a given estimator, such as the meet of the particles
+Or we can inspect the Expected Binder (EB) for a given estimator, such as the meet of the particles
 
 ```{r}
-ec_full = evi.contribution(cls.draw, z_meet)
+ec_full = eb.contribution(cls.draw, z_meet)
 
 data.frame(x1 = Y[,1],
            x2 = Y[,2],
-           VIC_full = ec_full,
+           BC_full = ec_full,
            Cluster = as.factor(z_meet)) %>%
   ggplot() +
   geom_point(aes(x = x1,y = x2,
-                 color = VIC_full,
+                 color = BC_full,
                  shape = Cluster)) +
-  scale_color_distiller("EVIC",palette = "OrRd",direction = 1)+
+  scale_color_distiller("EBC",palette = "OrRd",direction = 1)+
   # scale_shape_manual(values= c(18, 15,4, 8,19, 10,17))+
   theme_bw()+theme(legend.box = "horizotal") +
   guides(
     shape = guide_legend(title.position = "top", ncol = 3)
-  )+ggtitle("EVIC for the meet")
+  )+ggtitle("EBC for the meet")
 ```
 
 ## Binder Contribution
@@ -709,6 +709,6 @@ B(\rho_1,\rho_2) =\sum_{i=1}^n\left( \sum_{i'=1}^n\frac{1(c_{1,i}=c_{1,i'})}{n}\
 $$
 We define The contribution of the ith data point to the VI between the clusterings $\rho_1$ and $\rho_2$
 $$
-BI(\rho_1,\rho_2) =\left( \sum_{i'=1}^n\frac{1(c_{1,i}=c_{1,i'})}{n}\right)^2 +
+BC(\rho_1,\rho_2) =\left( \sum_{i'=1}^n\frac{1(c_{1,i}=c_{1,i'})}{n}\right)^2 +
 \left( \sum_{i'=1}^n\frac{1(c_{2,i}=c_{2,i'})}{n}\right)^2 - 2\left( \sum_{i'=1}^n\frac{1(c_{1,i}=c_{1,i'},c_{2,i}=c_{2,i'})}{n}\right)^2
 $$
