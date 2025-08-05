@@ -712,3 +712,23 @@ $$
 BC(\rho_1,\rho_2) =\left( \sum_{i'=1}^n\frac{1(c_{1,i}=c_{1,i'})}{n}\right)^2 +
 \left( \sum_{i'=1}^n\frac{1(c_{2,i}=c_{2,i'})}{n}\right)^2 - 2\left( \sum_{i'=1}^n\frac{1(c_{1,i}=c_{1,i'},c_{2,i}=c_{2,i'})}{n}\right)^2
 $$
+## Test omARI.Rcpp function. Aug 01
+1. Check the accuracy of the function.
+```{r }
+Rcpp::sourceCpp("src/omARI_Rcpp.cpp")
+cls1 <- matrix(sample(0:3,25,replace = TRUE), nrow = 1)
+cls2 <- matrix(sample(0:6,25,replace = TRUE), nrow = 1)
+salso_loss <- salso::binder(cls1,cls2)
+print(salso_loss)
+rcpp_loss <- omARI_compute_Rcpp(cls1,cls2, 4, 7)
+print(rcpp_loss)
+```
+2. Compare the speed.
+```{r }
+library(microbenchmark)
+microbenchmark(
+  salso = salso::binder(cls1,cls2),
+  cpp = Binder_compute_Rcpp(cls1,cls2, 4, 7),
+  times = 100L
+)
+```
