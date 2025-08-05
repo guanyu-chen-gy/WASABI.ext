@@ -305,7 +305,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste(
           paste0("Initial particle ", c(1:L)),
           paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
+          paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
     }
@@ -467,7 +467,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste(
           paste0("Initial particle ", c(1:L)),
           paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
+          paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
     }
@@ -490,7 +490,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste(
           paste0("Initial particle ", c(1:L)),
           paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
+          paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
     }
@@ -522,7 +522,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste(
           paste0("Initial particle ", c(1:L)),
           paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
+          paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
     }
@@ -568,7 +568,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste(
           paste0("Initial particle ", c(1:L)),
           paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
+          paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
     }
@@ -642,7 +642,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste(
           paste0("Initial particle ", c(1:L)),
           paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
+          paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
     }
@@ -660,7 +660,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste(
           paste0("Initial particle ", c(1:L)),
           paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
+          paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
     }
@@ -802,7 +802,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         cat(paste("Iteration =", iter, "\n"))
         cat(paste(
           paste0("Particle ", c(1:L)), paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), paste0(", sumVI = ", round(part.evi * counts / (mini.batch + (mini.batch == 0) * S), 3)),
+          paste0(", EB = ", round(part.evi, 3)), paste0(", sumVI = ", round(part.evi * counts / (mini.batch + (mini.batch == 0) * S), 3)),
           paste0(", w= ", round(counts / (mini.batch + (mini.batch == 0) * S), 3)), "\n"
         ))
         cat(paste("Wasserstein dist =", sum(part.evi * counts / (mini.batch + (mini.batch == 0) * S)), "\n"))
@@ -831,7 +831,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
           cat(paste("Iteration =", iter, "\n"))
           cat(paste(
             paste0("Particle ", c(1:L)), paste0(": number of clusters=", Ks.part),
-            paste0(", EVI = ", round(part.evi, 3)), paste0(", sumVI = ", round(part.evi * counts / S, 3)),
+            paste0(", EB = ", round(part.evi, 3)), paste0(", sumVI = ", round(part.evi * counts / S, 3)),
             paste0(", w= ", round(counts / S, 3)), "\n"
           ))
           cat(paste("Wasserstein dist =", sum(part.evi * counts / S), "\n"))
