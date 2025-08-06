@@ -1,16 +1,16 @@
 particle_search.ext <- function(cls.draw_relab, Ks.draw,
-                            part_relab, Ks.part, part.evi,
-                            L, method, swap_countone, max.k, lb,
-                            suppress.comment,
-                            first_iter = FALSE,
-                            loss = c("VI","Binder","omARI")) {
+                                part_relab, Ks.part, part.evi,
+                                L, method, swap_countone, max.k, lb,
+                                suppress.comment,
+                                first_iter = FALSE,
+                                loss = c("VI","Binder","omARI")) {
   S <- nrow(cls.draw_relab)
   if ( loss == "VI"){
     # ------------------------------------------ N-update step ------------------------------------------
-    
+
     viall <- VI_Rcpp(cls.draw_relab, part_relab, Ks.draw, Ks.part)
     viall[viall < 0] <- 0 # this is to correct numerical errors
-    
+
     # Assign each sample to nearest center
     # if a partition is equally distant from two particles randomize
     assign.vi <- apply(viall, 1, function(x) {
@@ -30,7 +30,7 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         counts[l_old] <- counts[l_old] - 1
       }
     }
-    
+
     part.evi_new <- part.evi
     if (first_iter) {
       # this is evi for the old particles with the new assignments, and it will get updated
@@ -38,21 +38,21 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         part.evi_new[l] <- sum(viall[assign.vi == l, l]) / counts[l]
       }
     }
-    
+
     part_new_relab <- part_relab
     part_new <- part_new_relab + 1
     Ks.part_new <- Ks.part
-    
+
     # Compute centre within each group (can parallelize this)
     for (l in 1:L) {
       # ------------------------------------------ Outlier-check step ------------------------------------------
-      
+
       if (counts[l] == 1) {
         part_new_relab[l, ] <- cls.draw_relab[assign.vi == l, ]
         part_new[l, ] <- part_new_relab[l, ] + 1
         Ks.part_new[l] <- Ks.draw[assign.vi == l]
         part.evi_new[l] <- 0
-        
+
         ### test changing center
         if (swap_countone) {
           tmp <- test_change.ext(
@@ -70,7 +70,7 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         }
       } else {
         # ------------------------------------------ VI-search step ------------------------------------------
-        
+
         if (method == "average" | method == "complete") {
           psm_K <- mcclust::comp.psm(matrix(1 + cls.draw_relab[assign.vi == l, ], counts[l], ncol(cls.draw_relab)))
           ##--------------------------------------------------------------------------------------------
@@ -95,10 +95,10 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         }
       }
     }
-    
+
     part_new_relab <- t(apply(part_new, 1, relabel_partition)) - 1
     Ks.part_new <- apply(part_new_relab, 1, function(x) max(x)) + 1
-    
+
     # If equal particles, then merge equal ones and set others partitions far from unique particles
     vi.part.new <- VI_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new)
     if (sum(vi.part.new[lower.tri(vi.part.new)] == 0) > 0) {
@@ -117,8 +117,8 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
       part.evi_new <- out$part.evi_new
       Ks.part_new <- out$Ks.part_new
     }
-    
-    
+
+
     return(list(
       part_relab = part_new_relab,
       Ks.part = Ks.part_new,
@@ -128,10 +128,10 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
     ))
   } else if (loss == "Binder"){
     # ------------------------------------------ N-update step ------------------------------------------
-    
+
     viall <- Binder_Rcpp(cls.draw_relab, part_relab, Ks.draw, Ks.part)
     viall[viall < 0] <- 0 # this is to correct numerical errors
-    
+
     # Assign each sample to nearest center
     # if a partition is equally distant from two particles randomize
     assign.vi <- apply(viall, 1, function(x) {
@@ -151,7 +151,7 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         counts[l_old] <- counts[l_old] - 1
       }
     }
-    
+
     part.evi_new <- part.evi
     if (first_iter) {
       # this is evi for the old particles with the new assignments, and it will get updated
@@ -159,21 +159,21 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         part.evi_new[l] <- sum(viall[assign.vi == l, l]) / counts[l]
       }
     }
-    
+
     part_new_relab <- part_relab
     part_new <- part_new_relab + 1
     Ks.part_new <- Ks.part
-    
+
     # Compute centre within each group (can parallelize this)
     for (l in 1:L) {
       # ------------------------------------------ Outlier-check step ------------------------------------------
-      
+
       if (counts[l] == 1) {
         part_new_relab[l, ] <- cls.draw_relab[assign.vi == l, ]
         part_new[l, ] <- part_new_relab[l, ] + 1
         Ks.part_new[l] <- Ks.draw[assign.vi == l]
         part.evi_new[l] <- 0
-        
+
         ### test changing center
         if (swap_countone) {
           tmp <- test_change.ext(
@@ -191,7 +191,7 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         }
       } else {
         # ------------------------------------------ VI-search step ------------------------------------------
-        
+
         if (method == "average" | method == "complete") {
           psm_K <- mcclust::comp.psm(matrix(1 + cls.draw_relab[assign.vi == l, ], counts[l], ncol(cls.draw_relab)))
           ##--------------------------------------------------------------------------------------------
@@ -216,10 +216,10 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         }
       }
     }
-    
+
     part_new_relab <- t(apply(part_new, 1, relabel_partition)) - 1
     Ks.part_new <- apply(part_new_relab, 1, function(x) max(x)) + 1
-    
+
     # If equal particles, then merge equal ones and set others partitions far from unique particles
     vi.part.new <- Binder_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new)
     if (sum(vi.part.new[lower.tri(vi.part.new)] == 0) > 0) {
@@ -238,8 +238,8 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
       part.evi_new <- out$part.evi_new
       Ks.part_new <- out$Ks.part_new
     }
-    
-    
+
+
     return(list(
       part_relab = part_new_relab,
       Ks.part = Ks.part_new,
@@ -249,10 +249,10 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
     ))
   } else if (loss == "omARI"){
     # ------------------------------------------ N-update step ------------------------------------------
-    
+
     viall <- omARI_Rcpp(cls.draw_relab, part_relab, Ks.draw, Ks.part)
     viall[viall < 0] <- 0 # this is to correct numerical errors
-    
+
     # Assign each sample to nearest center
     # if a partition is equally distant from two particles randomize
     assign.vi <- apply(viall, 1, function(x) {
@@ -272,7 +272,7 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         counts[l_old] <- counts[l_old] - 1
       }
     }
-    
+
     part.evi_new <- part.evi
     if (first_iter) {
       # this is evi for the old particles with the new assignments, and it will get updated
@@ -280,21 +280,21 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         part.evi_new[l] <- sum(viall[assign.vi == l, l]) / counts[l]
       }
     }
-    
+
     part_new_relab <- part_relab
     part_new <- part_new_relab + 1
     Ks.part_new <- Ks.part
-    
+
     # Compute centre within each group (can parallelize this)
     for (l in 1:L) {
       # ------------------------------------------ Outlier-check step ------------------------------------------
-      
+
       if (counts[l] == 1) {
         part_new_relab[l, ] <- cls.draw_relab[assign.vi == l, ]
         part_new[l, ] <- part_new_relab[l, ] + 1
         Ks.part_new[l] <- Ks.draw[assign.vi == l]
         part.evi_new[l] <- 0
-        
+
         ### test changing center
         if (swap_countone) {
           tmp <- test_change.ext(
@@ -312,37 +312,34 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
         }
       } else {
         # ------------------------------------------ VI-search step ------------------------------------------
-        
+
         if (method == "average" | method == "complete") {
           psm_K <- mcclust::comp.psm(matrix(1 + cls.draw_relab[assign.vi == l, ], counts[l], ncol(cls.draw_relab)))
           ##--------------------------------------------------------------------------------------------
           out <- minomARI_hclust(cls.draw_relab[assign.vi == l, ], Ks.draw[assign.vi == l],
-                             psm_K, method, max.k, lb,
-                             L = 1
+                                 psm_K, method, max.k, lb,
+                                 L = 1
           )
           part_new[l, ] <- out$part
           part.evi_new[l] <- out$evi
         }
         if (method == "greedy") {
-------------------------------##---------------------------------------------------------------- losstype(?)
-          output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab[assign.vi == l, ], list(decision_init = part_new[l, ], loss_type = "B"))
-          part_new[l, ] <- output_minepl$decision
-          part.evi_new[l] <- output_minepl$EPL
+          stop("Greedy method is not implemented for Binder loss function yet.")
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
           output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = omARI(), maxNClusters = 10,maxZealousAttempts = 1000)
           part_new[l, ] <- as.numeric(output_salso)
-          part.evi_new[l] <- as.numeric(attr(output_salso, "info")[4])
+          part.evi_new[l] <- as.numeric(attr(output_salso, "info")[3])
         }
       }
     }
-    
+
     part_new_relab <- t(apply(part_new, 1, relabel_partition)) - 1
     Ks.part_new <- apply(part_new_relab, 1, function(x) max(x)) + 1
-    
+
     # If equal particles, then merge equal ones and set others partitions far from unique particles
-    vi.part.new <- Binder_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new)
+    vi.part.new <- omARI_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new)
     if (sum(vi.part.new[lower.tri(vi.part.new)] == 0) > 0) {
       if (suppress.comment == FALSE) {
         cat("Equal particles found\n")
@@ -359,8 +356,8 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
       part.evi_new <- out$part.evi_new
       Ks.part_new <- out$Ks.part_new
     }
-    
-    
+
+
     return(list(
       part_relab = part_new_relab,
       Ks.part = Ks.part_new,
@@ -368,6 +365,8 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
       counts = counts,
       assign.vi = assign.vi
     ))
+  } else {
+    stop("Loss function not recognized. Use 'VI', 'Binder' or 'omARI'.")
   }
 }
 
@@ -375,9 +374,9 @@ particle_search.ext <- function(cls.draw_relab, Ks.draw,
 
 
 check_equal_particles.ext <- function(vi.part.new, L,
-                                  assign.vi, counts, part.evi_new,
-                                  cls.draw_relab, Ks.draw,
-                                  part_new_relab, Ks.part_new, loss = c("VI","Binder","omARI")) {
+                                      assign.vi, counts, part.evi_new,
+                                      cls.draw_relab, Ks.draw,
+                                      part_new_relab, Ks.part_new, loss = c("VI","Binder","omARI")) {
   if (loss == "VI"){
     part.ind.eq <- c(1:L)[sapply(1:L, function(k) {
       sum(vi.part.new[k, -k] == 0) > 0
@@ -410,7 +409,7 @@ check_equal_particles.ext <- function(vi.part.new, L,
       )
       part.ind.eq <- setdiff(part.ind.eq, part.ind.eq.l)
     }
-    
+
     return(list(
       part_new_relab = part_new_relab, counts = counts, Ks.part_new = Ks.part_new,
       assign.vi = assign.vi, part.evi_new = part.evi_new
@@ -446,12 +445,12 @@ check_equal_particles.ext <- function(vi.part.new, L,
       )
       part.ind.eq <- setdiff(part.ind.eq, part.ind.eq.l)
     }
-    
+
     return(list(
       part_new_relab = part_new_relab, counts = counts, Ks.part_new = Ks.part_new,
       assign.vi = assign.vi, part.evi_new = part.evi_new
     ))
-  }else if (loss == "omARI"){
+  } else if (loss == "omARI"){
     part.ind.eq <- c(1:L)[sapply(1:L, function(k) {
       sum(vi.part.new[k, -k] == 0) > 0
     })]
@@ -482,28 +481,30 @@ check_equal_particles.ext <- function(vi.part.new, L,
       )
       part.ind.eq <- setdiff(part.ind.eq, part.ind.eq.l)
     }
-    
+
     return(list(
       part_new_relab = part_new_relab, counts = counts, Ks.part_new = Ks.part_new,
       assign.vi = assign.vi, part.evi_new = part.evi_new
     ))
   }
-  
+  else {
+    stop("Loss function not recognized. Use 'VI', 'Binder' or 'omARI'.")
+  }
 }
 
 test_change.ext <- function(l, part_relab, cls.draw_relab.mb,
-                        viall, assign.vi, counts, part.evi,
-                        Ks.draw.mb, Ks.part, loss = c("VI","Binder","omARI")) {
+                            viall, assign.vi, counts, part.evi,
+                            Ks.draw.mb, Ks.part, loss = c("VI","Binder","omARI")) {
   L <- nrow(part_relab)
   S_temp <- nrow(cls.draw_relab.mb)
-  
+
   current_i <- which(assign.vi == l) # do we know for sure that l is in my minibatch?
   l_new <- (1:L)[-l][which.min(viall[current_i, -l])] # let's assign current_i to another particle (l_new)
-  
+
   assign.vi[current_i] <- l_new
   counts[l_new] <- counts[l_new] + 1
   counts[l] <- counts[l] - 1 # so = 0
-  
+
   # adding current_i to l_new
   if ( loss == "VI"){
     VI_new_tmp <- sum(VI_Rcpp(
@@ -512,17 +513,17 @@ test_change.ext <- function(l, part_relab, cls.draw_relab.mb,
     ))
     part.evi[l_new] <- ((counts[l_new] - 1) * part.evi[l_new] + VI_new_tmp) / counts[l_new]
     part.evi[l] <- 0 # because it's one element
-    
+
     # sample a new particle
     ind <- which(assign.vi %in% c(1:L)[counts > 1]) # this is to avoid some group becoming empty!
     new_i <- sample_max_jit(apply(viall[ind, ], 1, min))
     new_i <- ind[new_i]
-    
+
     l_old <- assign.vi[new_i]
     assign.vi[new_i] <- l
     counts[l] <- counts[l] + 1 # so = 1
     counts[l_old] <- counts[l_old] - 1
-    
+
     # removing new_i from l_old
     ##--------------------------------------------------------------
     VI_new_tmp <- sum(VI_Rcpp(
@@ -530,16 +531,16 @@ test_change.ext <- function(l, part_relab, cls.draw_relab.mb,
       Ks.part[l_old], Ks.draw.mb[new_i]
     ))
     part.evi[l_old] <- ((counts[l_new] + 1) * part.evi[l_old] - VI_new_tmp) / counts[l_new]
-    
+
     # update part_relab
     part_relab[l, ] <- cls.draw_relab.mb[new_i, ]
     Ks.part[l] <- Ks.draw.mb[new_i]
-    
+
     # update viall for the l column
     ##------------------------------------------------------------
     viall_l <- VI_Rcpp(cls.draw_relab.mb, part_relab[l, , drop = FALSE], Ks.draw.mb, Ks.part[l])
     viall[, l] <- as.numeric(viall_l)
-    
+
     wass_dist <- sum(part.evi * counts / S_temp)
     # cat("test_change: l ",l," l_new ",l_new," l_old ", l_old, "\n")
     return(list(
@@ -553,32 +554,32 @@ test_change.ext <- function(l, part_relab, cls.draw_relab.mb,
     ))
     part.evi[l_new] <- ((counts[l_new] - 1) * part.evi[l_new] + VI_new_tmp) / counts[l_new]
     part.evi[l] <- 0 # because it's one element
-    
+
     # sample a new particle
     ind <- which(assign.vi %in% c(1:L)[counts > 1]) # this is to avoid some group becoming empty!
     new_i <- sample_max_jit(apply(viall[ind, ], 1, min))
     new_i <- ind[new_i]
-    
+
     l_old <- assign.vi[new_i]
     assign.vi[new_i] <- l
     counts[l] <- counts[l] + 1 # so = 1
     counts[l_old] <- counts[l_old] - 1
-    
+
     # removing new_i from l_old
     VI_new_tmp <- sum(Binder_Rcpp(
       part_relab[l_old, , drop = FALSE], cls.draw_relab.mb[new_i, , drop = FALSE],
       Ks.part[l_old], Ks.draw.mb[new_i]
     ))
     part.evi[l_old] <- ((counts[l_new] + 1) * part.evi[l_old] - VI_new_tmp) / counts[l_new]
-    
+
     # update part_relab
     part_relab[l, ] <- cls.draw_relab.mb[new_i, ]
     Ks.part[l] <- Ks.draw.mb[new_i]
-    
+
     # update viall for the l column
     viall_l <- Binder_Rcpp(cls.draw_relab.mb, part_relab[l, , drop = FALSE], Ks.draw.mb, Ks.part[l])
     viall[, l] <- as.numeric(viall_l)
-    
+
     wass_dist <- sum(part.evi * counts / S_temp)
     # cat("test_change: l ",l," l_new ",l_new," l_old ", l_old, "\n")
     return(list(
@@ -592,38 +593,40 @@ test_change.ext <- function(l, part_relab, cls.draw_relab.mb,
     ))
     part.evi[l_new] <- ((counts[l_new] - 1) * part.evi[l_new] + VI_new_tmp) / counts[l_new]
     part.evi[l] <- 0 # because it's one element
-    
+
     # sample a new particle
     ind <- which(assign.vi %in% c(1:L)[counts > 1]) # this is to avoid some group becoming empty!
     new_i <- sample_max_jit(apply(viall[ind, ], 1, min))
     new_i <- ind[new_i]
-    
+
     l_old <- assign.vi[new_i]
     assign.vi[new_i] <- l
     counts[l] <- counts[l] + 1 # so = 1
     counts[l_old] <- counts[l_old] - 1
-    
+
     # removing new_i from l_old
     VI_new_tmp <- sum(omARI_Rcpp(
       part_relab[l_old, , drop = FALSE], cls.draw_relab.mb[new_i, , drop = FALSE],
       Ks.part[l_old], Ks.draw.mb[new_i]
     ))
     part.evi[l_old] <- ((counts[l_new] + 1) * part.evi[l_old] - VI_new_tmp) / counts[l_new]
-    
+
     # update part_relab
     part_relab[l, ] <- cls.draw_relab.mb[new_i, ]
     Ks.part[l] <- Ks.draw.mb[new_i]
-    
+
     # update viall for the l column
     viall_l <- omARI_Rcpp(cls.draw_relab.mb, part_relab[l, , drop = FALSE], Ks.draw.mb, Ks.part[l])
     viall[, l] <- as.numeric(viall_l)
-    
+
     wass_dist <- sum(part.evi * counts / S_temp)
     # cat("test_change: l ",l," l_new ",l_new," l_old ", l_old, "\n")
     return(list(
       wass_dist = wass_dist, counts = counts, assign.vi = assign.vi,
       part_relab = part_relab, part.evi = part.evi
     ))
+  } else {
+    stop("Loss function not recognized. Use 'VI', 'Binder' or 'omARI'.")
   }
 }
 
@@ -664,7 +667,7 @@ minB_hclust <- function(cls.draw_relab, Ks.draw,
   hclust_K <- stats::hclust(stats::as.dist(1 - psm), method = method)
   cls.hclust <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust_K, k = x)))
   if (lb) {
-            stop("lb option is not available for Binder loss")
+    stop("lb option is not available for Binder loss")
   } else {
     cls.hclust_relab <- t(apply(cls.hclust, 1, relabel_partition)) - 1
     Ks.hclust <- apply(cls.hclust_relab, 1, function(x) max(x)) + 1
@@ -690,8 +693,8 @@ minB_hclust <- function(cls.draw_relab, Ks.draw,
 }
 
 minomARI_hclust <- function(cls.draw_relab, Ks.draw,
-                        psm, method,
-                        max.k, lb, L = 1) {
+                            psm, method,
+                            max.k, lb, L = 1) {
   hclust_K <- stats::hclust(stats::as.dist(1 - psm), method = method)
   cls.hclust <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust_K, k = x)))
   if (lb) {
