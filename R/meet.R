@@ -145,7 +145,7 @@ binder.contribution <- function(Z1, Z2) {
   n <- base::length(Z1)
   vi.i <- function(i, Z1, Z2) {
     c <- (base::sum(Z1 == Z1[i]) / n)^2 +
-      log2(base::sum(Z2 == Z2[i]) / n)^2 -
+      (base::sum(Z2 == Z2[i]) / n)^2 -
       2 * (base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)^2
     c
   }
@@ -167,7 +167,7 @@ eb.wd.contribution <- function(output_wvi, Zhat) {
       base::sum(w * base::apply(Zmat, 1, function(x) {
         (base::sum(x == x[i]) / n)^2
       })) -
-       2 * base::sum(w * base::apply(Zmat, 1, function(x, y) {
+      2 * base::sum(w * base::apply(Zmat, 1, function(x, y) {
         (base::sum((x == x[i]) & (y == y[i])) / n)^2
       }, y = Zhat))
     c
@@ -189,7 +189,7 @@ eb.contribution <- function(Zmat, Zhat) {
   evi.i <- function(i, Zmat, Zhat) {
     c <- (base::sum(Zhat == Zhat[i]) / n)^2 +
       base::sum(base::apply(Zmat, 1, function(x) {
-         (base::sum(x == x[i]) / n)^2
+        (base::sum(x == x[i]) / n)^2
       })) / S -
       2  * base::sum(base::apply(Zmat, 1, function(x, y) {
         (base::sum((x == x[i]) & (y == y[i])) / n)^2
@@ -197,4 +197,40 @@ eb.contribution <- function(Zmat, Zhat) {
     c
   }
   base::unlist(base::lapply(seq_len(n), evi.i, Zmat = Zmat, Zhat = Zhat))
+}
+
+#' n choose 2
+#' Computes the binomial coefficient "n choose 2", which is the number of ways to choose 2 items from n without regard to the order.
+#'
+#' @param n Integer: the number of items to choose from.
+#' @return Integer: the number of combinations of 2 items from n.
+#' @examples
+#' choose2(5) # Returns 10, since there are 10 ways to choose 2 items from 5.
+#' @export
+choose2 <- function(n) {
+  if (n < 2) {
+    return(0)
+  }
+  return(n * (n - 1) / 2)
+}
+
+#' omARI contribution between two partitions
+#'
+#' Calculates the individual contributions of observations to the Binder distance between partitions Z1 and Z2.
+#'
+#' @param Z1 Integer or factor vector: length-n cluster labels for partition 1.
+#' @param Z2 Integer or factor vector: length-n cluster labels for partition 2.
+#' @return Numeric vector of length n: VI contribution for each observation.
+#' @export
+omARI.contribution <- function(Z1, Z2) {
+  n <- base::length(Z1)
+  vi.i <- function(i, Z1, Z2) {
+    f <- choose2(base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])))
+    g <- choose2(base::sum(Z1 == Z1[i]))
+    h <- choose2(base::sum(Z2 == Z2[i]))
+    p <- choose2(n)
+    c <- (f - g * h / p)/(0.5 *(g + h) - g * h / p)
+    c
+  }
+  base::unlist(base::lapply(seq_len(n), vi.i, Z1 = Z1, Z2 = Z2))
 }
