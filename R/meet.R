@@ -229,7 +229,7 @@ omARI.contribution <- function(Z1, Z2) {
     g <- choose2(base::sum(Z1 == Z1[i]))
     h <- choose2(base::sum(Z2 == Z2[i]))
     p <- choose2(n)
-    c <- (f - g * h / p)/(0.5 *(g + h) - g * h / p)
+    c <- 1 - (f - g * h / p)/(0.5 *(g + h) - g * h / p)
     c
   }
   base::unlist(base::lapply(seq_len(n), vi.i, Z1 = Z1, Z2 = Z2))
