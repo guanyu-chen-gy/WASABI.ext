@@ -27,7 +27,7 @@
 #' @param max.k Integer, the maximum number of clusters considered in the WASABI approximation (for "average", "complete", "greedy"). If NULL, it is set to the minimum of \code{max(Ks.draw)+10} and \code{ceiling(sqrt(n))}.
 #' @param L Integer, the number of particles to be used in the WASABI approximation.
 #' @param max.iter Integer, the maximum number of iterations for the WASABI algorithm.
-#' @param eps Numeric, the convergence threshold for the WASABI algorithm. The algorithm stops when the difference in Wasserstein distance between two consecutive iterations is less than \code{eps}.
+#' @param eps Numeric, the relative convergence threshold for the WASABI algorithm. The algorithm stops when the difference in Wasserstein distance between two consecutive iterations is less than \code{eps * log2(n)}.
 #' @param mini.batch Integer, the size of the mini-batch used in the WASABI algorithm. If 0, the full batch is used.
 #' @param extra.iter Integer, the number of additional iterations to run after the mini-batch optimization. If NULL, defaults to 1 if \code{mini.batch > 0}. Has to be greater than 0.
 #' @param swap_countone Logical, if TRUE, the WASABI algorithm allows swapping of particles with only one sample assigned to them (outlier-check step).
@@ -115,7 +115,10 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
     }
   }
 
-  if (method.init == "average" | method.init == "complete") {
+  psm_needed <- (method.init == "average" | method.init == "complete" | method.init == "topvi" | method.init == "+++")
+  psm_needed <- psm_needed | (method == "average" | method == "complete") 
+  psm_needed <- psm_needed | (lb == TRUE)
+  if (psm_needed) {
     if (is.null(psm)) {
       stop("psm must be provided if method.init = avg or comp and lb = TRUE")
     }
@@ -132,6 +135,10 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       stop("number of data points must be the same in initial particles and draws")
     }
   }
+  
+  if (method.init == "+++") {
+    warning("Initialization method '+++' is deprecated and will be removed in future versions. Use '++' instead.")
+  }
 
   if (!is.null(seed)) {
     set.seed(seed)
@@ -146,6 +153,8 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
   part <- matrix(0, L, n)
   part.evi <- rep(0, L)
 
+  eps <- eps * log2(n)
+  
   if (is.null(max.k)) max.k <- (max(Ks.draw) + 10)
   if (max.k < L) max.k <- L
   if (is.null(extra.iter)) extra.iter <- 3 # used only if mini.batch > 0
@@ -177,9 +186,13 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       part[L, ] <- as.numeric(output_salso)
       part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
     }
+    psm_ret = list(psm)
+    if(return_psm & is.null(psm_ret)) {
+      psm_ret <- list(mcclust::comp.psm(cls.draw))
+    }
     output <- list(
       particles = part, EVI = part.evi, wass.dist = sum(part.evi),
-      part.psm = psm, part.weights = 1, draws.assign = NULL
+      part.psm = psm_ret, part.weights = 1, draws.assign = NULL
     )
     return(output)
   }
