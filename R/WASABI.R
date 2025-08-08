@@ -15,7 +15,7 @@
 #'        method = c("average", "complete", "greedy", "salso"),
 #'        max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
 #'        extra.iter = NULL,swap_countone = FALSE,suppress.comment = TRUE,
-#'        return_psm = FALSE,seed = NULL, loss = c("VI","Binder"))
+#'        return_psm = FALSE,seed = NULL, loss = c("VI","Binder","omARI"))
 #' 
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
 #' @param psm The posterior similarity matrix obtained from MCMC samples of partitions stored in \code{cls.draw}.
@@ -34,7 +34,7 @@
 #' @param suppress.comment Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.
 #' @param return_psm Logical, if TRUE, returns the posterior similarity matrix for each particle.
 #' @param seed An optional integer to set the random seed for reproducibility. If NULL, no seed is set.
-#' @param loss Loss function. Options are "VI" and "Binder".
+#' @param loss Loss function. Options are "VI", "Binder", and "omARI". The loss function determines the optimization criterion for the WASABI algorithm.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -90,7 +90,7 @@
 #' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso", 
 #'                      mini.batch = 200, max.iter = 20, extra.iter = 10)
 #' }
-WASABI.ext <- function(cls.draw = NULL, psm = NULL,
+WASABI <- function(cls.draw = NULL, psm = NULL,
                        method.init = c("average", "complete", "fixed", "++", "random_partition", "+++", "topvi"),
                        lb = FALSE, thin.init = NULL, part.init = NULL,
                        method = c("average", "complete", "greedy", "salso"),
@@ -945,7 +945,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         mb.samp <- sample(1:S, mini.batch, replace = FALSE)
       }
       
-      out <- particle_search.ext(
+      out <- particle_search(
         cls.draw_relab[mb.samp, ], Ks.draw[mb.samp],
         part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, (iter == 1), loss = "VI"
       )
@@ -975,7 +975,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
       if (suppress.comment == FALSE) cat(paste("*Running full batch after mini-batch*\n"))
       diff <- 1
       while (iter <= (max.iter + extra.iter) & diff > eps) {
-        out <- particle_search.ext(
+        out <- particle_search(
           cls.draw_relab, Ks.draw,
           part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, loss = "VI"
         )
@@ -1031,7 +1031,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         mb.samp <- sample(1:S, mini.batch, replace = FALSE)
       }
       
-      out <- particle_search.ext(
+      out <- particle_search(
         cls.draw_relab[mb.samp, ], Ks.draw[mb.samp],
         part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, (iter == 1), loss = "Binder"
       )
@@ -1061,7 +1061,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
       if (suppress.comment == FALSE) cat(paste("*Running full batch after mini-batch*\n"))
       diff <- 1
       while (iter <= (max.iter + extra.iter) & diff > eps) {
-        out <- particle_search.ext(
+        out <- particle_search(
           cls.draw_relab, Ks.draw,
           part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, loss = "Binder"
         )
@@ -1117,7 +1117,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
         mb.samp <- sample(1:S, mini.batch, replace = FALSE)
       }
       
-      out <- particle_search.ext(
+      out <- particle_search(
         cls.draw_relab[mb.samp, ], Ks.draw[mb.samp],
         part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, (iter == 1), loss = "omARI"
       )
@@ -1147,7 +1147,7 @@ WASABI.ext <- function(cls.draw = NULL, psm = NULL,
       if (suppress.comment == FALSE) cat(paste("*Running full batch after mini-batch*\n"))
       diff <- 1
       while (iter <= (max.iter + extra.iter) & diff > eps) {
-        out <- particle_search.ext(
+        out <- particle_search(
           cls.draw_relab, Ks.draw,
           part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, loss = "omARI"
         )

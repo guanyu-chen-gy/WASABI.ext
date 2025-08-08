@@ -18,7 +18,7 @@
 #'                   extra.iter = NULL,
 #'                   swap_countone = FALSE,
 #'                   suppress.comment = TRUE,
-#'                   return_psm = FALSE, seed = NULL, loss = c("VI","Binder"))
+#'                   return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI"))
 #'
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
@@ -41,6 +41,7 @@
 #' @param suppress.comment Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.
 #' @param return_psm Logical, if TRUE, returns the posterior similarity matrix for each particle.
 #' @param seed An optional integer, or a vector of length \code{multi.start} of integers to set the random seed for reproducibility. If NULL, no seed is set.
+#' @param loss Character, the loss function to be used in the WASABI algorithm. Options are "VI", "Binder", and "omARI". Defaults to "VI".
 #' @return particles A matrix with \code{L} rows, each containing one of the WASABI particles, ordered by decreasing weight.
 #' @return EVI A vector of size \code{L}, containing expected VI associated to each particle.
 #' @return wass.dist A numeric value giving the Wasserstein distance achieved by the WASABI approximation.
@@ -124,7 +125,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                                   extra.iter = NULL,
                                   swap_countone = FALSE,
                                   suppress.comment = TRUE,
-                                  return_psm = FALSE, seed = NULL, loss = c("VI","Binder")) {
+                                  return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI")) {
   if (!is.null(seed)) {
     if (length(seed) == 1) {
       RNGkind("L'Ecuyer-CMRG")
@@ -151,7 +152,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
   }
   if (loss == "VI"){
     if (L == 1) {
-      out <- WASABI.ext(cls.draw, psm,
+      out <- WASABI(cls.draw, psm,
                         method.init, lb,
                         thin.init, part.init,
                         method, max.k,
@@ -174,7 +175,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     }
     out_par <- parallel::mclapply(1:multi.start,
                                   function(g) {
-                                    WASABI.ext(cls.draw, psm,
+                                    WASABI(cls.draw, psm,
                                                method.init_vec[g], lb,
                                                thin.init, part.init,
                                                method, max.k,
@@ -193,7 +194,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     return(out_par[[i_opt]])
   } else if (loss == "Binder"){
     if (L == 1) {
-      out <- WASABI.ext(cls.draw, psm,
+      out <- WASABI(cls.draw, psm,
                         method.init, lb,
                         thin.init, part.init,
                         method, max.k,
@@ -216,7 +217,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     }
     out_par <- parallel::mclapply(1:multi.start,
                                   function(g) {
-                                    WASABI.ext(cls.draw, psm,
+                                    WASABI(cls.draw, psm,
                                                method.init_vec[g], lb,
                                                thin.init, part.init,
                                                method, max.k,
@@ -235,7 +236,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     return(out_par[[i_opt]])
   } else if (loss == "omARI") {
     if (L == 1) {
-      out <- WASABI.ext(cls.draw, psm,
+      out <- WASABI(cls.draw, psm,
                         method.init, lb,
                         thin.init, part.init,
                         method, max.k,
@@ -258,7 +259,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     }
     out_par <- parallel::mclapply(1:multi.start,
                                   function(g) {
-                                    WASABI.ext(cls.draw, psm,
+                                    WASABI(cls.draw, psm,
                                                method.init_vec[g], lb,
                                                thin.init, part.init,
                                                method, max.k,

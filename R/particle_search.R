@@ -55,7 +55,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
 
         ### test changing center
         if (swap_countone) {
-          tmp <- test_change.ext(
+          tmp <- test_change(
             l, part_new_relab, cls.draw_relab, viall, assign.vi, counts,
             part.evi_new, Ks.draw, Ks.part_new, loss = "VI"
           )
@@ -105,7 +105,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
       if (suppress.comment == FALSE) {
         cat("Equal particles found\n")
       }
-      out <- check_equal_particles.ext(
+      out <- check_equal_particles(
         vi.part.new, L,
         assign.vi, counts, part.evi_new,
         cls.draw_relab, Ks.draw,
@@ -176,7 +176,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
 
         ### test changing center
         if (swap_countone) {
-          tmp <- test_change.ext(
+          tmp <- test_change(
             l, part_new_relab, cls.draw_relab, viall, assign.vi, counts,
             part.evi_new, Ks.draw, Ks.part_new, loss = "Binder"
           )
@@ -226,7 +226,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
       if (suppress.comment == FALSE) {
         cat("Equal particles found\n")
       }
-      out <- check_equal_particles.ext(
+      out <- check_equal_particles(
         vi.part.new, L,
         assign.vi, counts, part.evi_new,
         cls.draw_relab, Ks.draw,
@@ -297,7 +297,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
 
         ### test changing center
         if (swap_countone) {
-          tmp <- test_change.ext(
+          tmp <- test_change(
             l, part_new_relab, cls.draw_relab, viall, assign.vi, counts,
             part.evi_new, Ks.draw, Ks.part_new, loss = "omARI"
           )
@@ -344,7 +344,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
       if (suppress.comment == FALSE) {
         cat("Equal particles found\n")
       }
-      out <- check_equal_particles.ext(
+      out <- check_equal_particles(
         vi.part.new, L,
         assign.vi, counts, part.evi_new,
         cls.draw_relab, Ks.draw,
