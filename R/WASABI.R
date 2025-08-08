@@ -34,6 +34,7 @@
 #' @param suppress.comment Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.
 #' @param return_psm Logical, if TRUE, returns the posterior similarity matrix for each particle.
 #' @param seed An optional integer to set the random seed for reproducibility. If NULL, no seed is set.
+#' @param ... Additional arguments passed to the salso algorithm.
 #'
 #' @return A list with elements:
 #' \describe{

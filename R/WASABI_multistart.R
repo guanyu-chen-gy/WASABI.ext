@@ -46,6 +46,7 @@
 #' @return part.psm A list of size \code{L}, each element containing the posterior similarity matrix corresponding to the region of attraction of each particle. Only returned if \code{return_psm} is set to TRUE.
 #' @return part.weights A vector of size \code{L}, containing weight associated to each particle.
 #' @return draws.assign A vector containing the assignment of each MCMC sample to its closest particle. Its length is equal to the number of rows in \code{cls.draw}.
+#' @param ... Additional arguments passed to the salso algorithm.
 #'
 #' @return A list with elements:
 #' \describe{
