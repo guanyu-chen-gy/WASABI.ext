@@ -18,7 +18,7 @@
 #'                   extra.iter = NULL,
 #'                   swap_countone = FALSE,
 #'                   suppress.comment = TRUE,
-#'                   return_psm = FALSE, seed = NULL)
+#'                   seed = NULL)
 #'
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
@@ -34,12 +34,11 @@
 #' @param max.k Integer, the maximum number of clusters considered in the WASABI approximation (for "average", "complete", "greedy"). If NULL, it is set to the minimum of \code{max(Ks.draw)+10} and \code{ceiling(sqrt(n))}.
 #' @param L Integer, the number of particles to be used in the WASABI approximation.
 #' @param max.iter Integer, the maximum number of iterations for the WASABI algorithm.
-#' @param eps Numeric, the convergence threshold for the WASABI algorithm. The algorithm stops when the difference in Wasserstein distance between two consecutive iterations is less than \code{eps}.
+#' @param eps Numeric, the relative convergence threshold for the WASABI algorithm. The algorithm stops when the difference in Wasserstein distance between two consecutive iterations is less than \code{eps * log2(n)}.
 #' @param mini.batch Integer, the size of the mini-batch used in the WASABI algorithm. If 0, the full batch is used.
 #' @param extra.iter Integer, the number of additional iterations to run after the mini-batch optimization. If NULL, defaults to 1 if \code{mini.batch > 0}.
 #' @param swap_countone Logical, if TRUE, the WASABI algorithm allows swapping of particles with only one sample assigned to them (outlier-check step).
 #' @param suppress.comment Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.
-#' @param return_psm Logical, if TRUE, returns the posterior similarity matrix for each particle.
 #' @param seed An optional integer, or a vector of length \code{multi.start} of integers to set the random seed for reproducibility. If NULL, no seed is set.
 #' @return particles A matrix with \code{L} rows, each containing one of the WASABI particles, ordered by decreasing weight.
 #' @return EVI A vector of size \code{L}, containing expected VI associated to each particle.
@@ -80,6 +79,7 @@
 #' }
 #' The recommended method is \code{"salso"}, as it is the most accurate while remaining efficient for larger datasets.
 #' In case of larger datasets, it is recommended to use method \code{"average"}, or the \code{mini.batch} argument to speed up the algorithm.
+#' Note: in each iteration, the WASABI algorithm is run with \code{return_psm = FALSE} to avoid long computation times for large datasets.
 #'
 #' @seealso WASABI, elbow
 #'
@@ -124,7 +124,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                               extra.iter = NULL,
                               swap_countone = FALSE,
                               suppress.comment = TRUE,
-                              return_psm = FALSE, seed = NULL) {
+                              seed = NULL) {
   if (!is.null(seed)) {
     if (length(seed) == 1) {
       RNGkind("L'Ecuyer-CMRG")
@@ -149,6 +149,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
       ncores <- multi.start
     }
   }
+  return_psm <- FALSE # default to FALSE to avoid long computation times for large datasets
 
   if (L == 1) {
     out <- WASABI(cls.draw, psm,
