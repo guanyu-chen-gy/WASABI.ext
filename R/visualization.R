@@ -369,7 +369,7 @@ ggscatter_grid2d <- function(output_wvi, Y, title = NULL, legend = "right") {
   }
   df$Cluster <- as.factor(df$Cluster)
 
-  if(length(unique(df))<=25){
+  if(length(unique(df$Cluster))<=25){
     p <- ggplot2::ggplot(df) +
       ggplot2::geom_point(
         ggplot2::aes(
@@ -430,7 +430,6 @@ ggscatter_pca <- function(output_wvi, Y, title = NULL) {
   Ypc <- out_pc$x
   particles <- output_wvi$particles
   weights <- round(output_wvi$part.weights, 2)
-
   df <- data.frame(
     x1 = NULL,
     x2 = NULL,
@@ -450,8 +449,28 @@ ggscatter_pca <- function(output_wvi, Y, title = NULL) {
   }
   df$Cluster <- as.factor(df$Cluster)
 
-  p <- ggplot2::ggplot(df) +
-    ggplot2::geom_point(ggplot2::aes(x = .data$x1, y = .data$x2, color = .data$Cluster)) +
+  if(length(unique(df$Cluster))<=25){
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster,
+          shape = .data$Cluster
+        )
+    ) + scale_shape_manual(values = c(1:25))
+  } else {
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster
+        )
+      )
+  }
+
+  p <- p + 
     ggplot2::ylab(expression("PC"[2])) +
     ggplot2::xlab(expression("PC"[1])) +
     ggplot2::facet_wrap(ggplot2::vars(.data$ID)) +
