@@ -369,20 +369,32 @@ ggscatter_grid2d <- function(output_wvi, Y, title = NULL, legend = "right") {
   }
   df$Cluster <- as.factor(df$Cluster)
 
-  p <- ggplot2::ggplot(df) +
-    ggplot2::geom_point(
-      ggplot2::aes(
-        x = .data$x1,
-        y = .data$x2,
-        color = .data$Cluster,
-        shape = .data$Cluster
+  if(length(unique(df))<=25){
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster,
+          shape = .data$Cluster
+        )
+    ) + scale_shape_manual(values = c(1:25))
+  } else {
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster
+        )
       )
-    ) +
+  }
+
+  p <- p +
     ggplot2::ylab(expression("x"[2])) +
     ggplot2::xlab(expression("x"[1])) +
     ggplot2::facet_wrap(ggplot2::vars(.data$ID)) +
     ggplot2::theme_bw()
-
   if (legend == "bottom") {
     p <- p + ggplot2::theme(legend.position = "bottom")
   }
