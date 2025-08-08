@@ -18,7 +18,7 @@
 #'                   extra.iter = NULL,
 #'                   swap_countone = FALSE,
 #'                   suppress.comment = TRUE,
-#'                   seed = NULL)
+#'                   seed = NULL, ...)
 #'
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
@@ -124,7 +124,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                               extra.iter = NULL,
                               swap_countone = FALSE,
                               suppress.comment = TRUE,
-                              seed = NULL) {
+                              seed = NULL, ...) {
   if (!is.null(seed)) {
     if (length(seed) == 1) {
       RNGkind("L'Ecuyer-CMRG")
@@ -161,7 +161,8 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
       swap_countone,
       suppress.comment,
       return_psm,
-      seed = NULL
+      seed = NULL,
+      ...
     )
     return(out)
   }
@@ -183,7 +184,8 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
         swap_countone,
         suppress.comment,
         return_psm,
-        seed = seeds[g]
+        seed = seeds[g],
+        ...
       )
     },
     mc.cores = ncores

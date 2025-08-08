@@ -2,7 +2,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
                             part_relab, Ks.part, part.evi,
                             L, method, swap_countone, max.k, lb,
                             suppress.comment,
-                            first_iter = FALSE) {
+                            first_iter = FALSE, ...) {
   S <- nrow(cls.draw_relab)
 
   # ------------------------------------------ N-update step ------------------------------------------
@@ -85,7 +85,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         part.evi_new[l] <- output_minepl$EPL
       }
       if (method == "salso") {
-        output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ])
+        output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], ...)
         part_new[l, ] <- as.numeric(output_salso)
         part.evi_new[l] <- as.numeric(attr(output_salso, "info")[4])
       }
