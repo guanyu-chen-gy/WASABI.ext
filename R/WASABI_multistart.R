@@ -128,6 +128,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                               seed = NULL, ...) {
   if (!is.null(seed)) {
     if (length(seed) == 1) {
+      default_rng <- RNGkind()
       RNGkind("L'Ecuyer-CMRG")
       set.seed(seed)
       seeds <- NULL
@@ -143,8 +144,9 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
   }
 
   if (ncores > 1) {
-    if (!requireNamespace("parallel", quietly = TRUE)) {
-      stop("The 'parallel' package is required for multi-core processing. Please install it or run with ncores = 1.")
+    if(.Platform$OS.type == "windows") {
+      ncores <- 1
+      warning("Multi-core processing is not supported on Windows. Setting ncores = 1.")
     }
     if (multi.start < ncores) {
       ncores <- multi.start
@@ -192,5 +194,8 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     mc.cores = ncores
   )
   i_opt <- which.min(lapply(out_par, function(x) x$wass.dist))
+  if(exists("default_rng")) {
+    do.call(RNGkind, as.list(default_rng))
+  }
   return(out_par[[i_opt]])
 }
