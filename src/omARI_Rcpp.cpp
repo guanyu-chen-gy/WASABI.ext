@@ -1,8 +1,14 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-//' find choose two
-auto comb2 = [](int x) { return x > 1 ? (double)x * (x - 1) / 2.0 : 0.0; };
+//' This function computes the number of ways to choose 2 items from x items.
+//'
+//' @param x An integer, the number of items.
+//' @return The number of ways to choose 2 items from x items, or 0 if x is less than or equal to 1.
+// [[Rcpp::export]]
+int comb2 (int x) 
+{ return x > 1 ? x * (x - 1) / 2.0 : 0.0; }
+
 //' Compute "one minus adjusted Rand index" between two partitions
 //'
 //' @param c1 An integer vector of cluster labels for $n$ items. Should be 0-indexed.

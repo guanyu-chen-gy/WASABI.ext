@@ -3,7 +3,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
                                 L, method, swap_countone, max.k, lb,
                                 suppress.comment,
                                 first_iter = FALSE,
-                                loss = c("VI","Binder","omARI")) {
+                                loss = c("VI","Binder","omARI"), a = 1, ...) {
   S <- nrow(cls.draw_relab)
   if ( loss == "VI"){
     # ------------------------------------------ N-update step ------------------------------------------
@@ -89,7 +89,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
-          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ])
+          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = VI(a = a), ...)
           part_new[l, ] <- as.numeric(output_salso)
           part.evi_new[l] <- as.numeric(attr(output_salso, "info")[4])
         }
@@ -210,7 +210,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
-          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = binder(), maxNClusters = 10,maxZealousAttempts = 1000)
+          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = binder(a = a), ...)
           part_new[l, ] <- as.numeric(output_salso)
           part.evi_new[l] <- as.numeric(attr(output_salso, "info")[4])
         }
@@ -328,7 +328,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
-          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = omARI(), maxNClusters = 10,maxZealousAttempts = 1000)
+          output_salso <- salso::salso(x = cls.draw_relab[assign.vi == l, ], loss = omARI(),...)
           part_new[l, ] <- as.numeric(output_salso)
           part.evi_new[l] <- as.numeric(attr(output_salso, "info")[3])
         }
