@@ -122,7 +122,10 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
     }
   }
 
-  if (method.init == "average" | method.init == "complete") {
+  psm_needed <- (method.init == "average" | method.init == "complete" | method.init == "topvi" | method.init == "+++")
+  psm_needed <- psm_needed | (method == "average" | method == "complete")
+  psm_needed <- psm_needed | (lb == TRUE)
+  if (psm_needed) {
     if (is.null(psm)) {
       stop("psm must be provided if method.init = avg or comp and lb = TRUE")
     }
@@ -138,6 +141,10 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
     if (dim(part.init)[2] != dim(cls.draw)[2]) {
       stop("number of data points must be the same in initial particles and draws")
     }
+  }
+
+  if (method.init == "+++") {
+    warning("Initialization method '+++' is deprecated and will be removed in future versions. Use '++' instead.")
   }
 
   if (loss == "omARI" & a != 1) {
@@ -156,6 +163,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
   S <- dim(cls.draw)[1]
   part <- matrix(0, L, n)
   part.evi <- rep(0, L)
+  eps <- eps * log2(n)
 
   if (is.null(max.k)) max.k <- (max(Ks.draw) + 10)
   if (max.k < L) max.k <- L
@@ -189,9 +197,13 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
         part[L, ] <- as.numeric(output_salso)
         part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
       }
+      psm_ret = list(psm)
+      if(return_psm & is.null(psm_ret)) {
+        psm_ret <- list(mcclust::comp.psm(cls.draw))
+      }
       output <- list(
         particles = part, EVI = part.evi, wass.dist = sum(part.evi),
-        part.psm = psm, part.weights = 1, draws.assign = NULL
+        part.psm = psm_ret, part.weights = 1, draws.assign = NULL
       )
       return(output)
     }
@@ -218,9 +230,13 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
         part[L, ] <- as.numeric(output_salso)
         part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
       }
+      psm_ret = list(psm)
+      if(return_psm & is.null(psm_ret)) {
+        psm_ret <- list(mcclust::comp.psm(cls.draw))
+      }
       output <- list(
         particles = part, EVI = part.evi, wass.dist = sum(part.evi),
-        part.psm = psm, part.weights = 1, draws.assign = NULL
+        part.psm = psm_ret, part.weights = 1, draws.assign = NULL
       )
       return(output)
     }
@@ -242,9 +258,13 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
         part[L, ] <- as.numeric(output_salso)
         part.evi[L] <- as.numeric(attr(output_salso, "info")[3])
       }
+      psm_ret = list(psm)
+      if(return_psm & is.null(psm_ret)) {
+        psm_ret <- list(mcclust::comp.psm(cls.draw))
+      }
       output <- list(
         particles = part, EVI = part.evi, wass.dist = sum(part.evi),
-        part.psm = psm, part.weights = 1, draws.assign = NULL
+        part.psm = psm_ret, part.weights = 1, draws.assign = NULL
       )
       return(output)
     } else {
