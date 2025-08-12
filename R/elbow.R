@@ -11,7 +11,7 @@
 #'       max.k = NULL, max.iter = 20, eps = 0.01,
 #'       mini.batch = NULL, extra.iter = NULL,
 #'       swap_countone = FALSE,
-#'       suppress.comment = TRUE, seed = NULL)
+#'       suppress.comment = TRUE, seed = NULL, loss = c("VI","Binder","omARI"))
 #'
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
@@ -33,6 +33,7 @@
 #' @param swap_countone Logical, if TRUE, the WASABI algorithm allows swapping of particles with only one sample assigned to them (outlier-check step).
 #' @param suppress.comment Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.
 #' @param seed An optional integer to set the random seed for reproducibility. If NULL, no seed is set.
+#' @param loss Character, the type of loss function to use. Options are "VI" (default), "Binder", and "omARI". The choice of loss function affects the Wasserstein distance calculation.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -69,7 +70,7 @@
 #' @seealso WASABI, WASABI_multistart
 #'
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' set.seed(123)
@@ -89,14 +90,14 @@
 #' plot(WASABI_elbow$wass_vec, type = "b")
 #' }
 elbow <- function(cls.draw, L_max = 10, psm = NULL,
-                  multi.start = 1, ncores = 1,
-                  method.init = "topvi", add_topvi = FALSE, lb = TRUE,
-                  thin.init = NULL, part.init = NULL,
-                  method = "average",
-                  max.k = NULL, max.iter = 20, eps = 0.01,
-                  mini.batch = NULL, extra.iter = NULL,
-                  swap_countone = FALSE,
-                  suppress.comment = TRUE, seed = NULL) {
+                      multi.start = 1, ncores = 1,
+                      method.init = "topvi", add_topvi = FALSE, lb = TRUE,
+                      thin.init = NULL, part.init = NULL,
+                      method = "average",
+                      max.k = NULL, max.iter = 20, eps = 0.01,
+                      mini.batch = NULL, extra.iter = NULL,
+                      swap_countone = FALSE,
+                      suppress.comment = TRUE, seed = NULL, loss = c("VI","Binder","omARI"), a = 1, ...) {
   if (is.null(psm)) {
     psm <- mcclust::comp.psm(cls.draw)
   }
@@ -104,25 +105,65 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
   if (is.null(mini.batch) == TRUE) {
     mini.batch <- round(nrow(cls.draw) / 5)
   }
-
+  if (lb == TRUE & loss == "Binder"){
+    warning("lower bound is not applied for Binder loss")
+  }
+  if (lb == TRUE & loss == "omARI"){
+    warning("lower bound is not applied for omARI loss")
+  }
   output_list <- list()
   wass_vec <- numeric(L_max)
-
-  for (ell in 1:L_max) {
-    output_wvi <- WASABI_multistart(cls.draw, psm,
-      multi.start = multi.start, ncores = ncores,
-      method.init = method.init, add_topvi = add_topvi,
-      lb = lb, thin.init = thin.init, part.init = part.init,
-      method = method, max.k = max.k, L = ell,
-      max.iter = max.iter, eps = eps,
-      mini.batch = mini.batch, extra.iter = extra.iter,
-      swap_countone = swap_countone,
-      suppress.comment = suppress.comment,
-      seed = seed
-    )
-    output_list[[ell]] <- output_wvi
-    wass_vec[ell] <- output_wvi$wass.dist
-    cat(paste("Completed ", ell, "/", L_max, "\n"))
+  if (loss == "VI"){
+    for (ell in 1:L_max) {
+      output_wvi <- WASABI_multistart(cls.draw, psm,
+                                          multi.start = multi.start, ncores = ncores,
+                                          method.init = method.init, add_topvi = add_topvi,
+                                          lb = lb, thin.init = thin.init, part.init = part.init,
+                                          method = method, max.k = max.k, L = ell,
+                                          max.iter = max.iter, eps = eps,
+                                          mini.batch = mini.batch, extra.iter = extra.iter,
+                                          swap_countone = swap_countone,
+                                          suppress.comment = suppress.comment,
+                                          seed = seed, loss = "VI", a, ...
+      )
+      output_list[[ell]] <- output_wvi
+      wass_vec[ell] <- output_wvi$wass.dist
+      cat(paste("Completed ", ell, "/", L_max, "\n"))
+    }
+  } else if (loss == "Binder"){
+    for (ell in 1:L_max) {
+      output_wvi <- WASABI_multistart(cls.draw, psm,
+                                          multi.start = multi.start, ncores = ncores,
+                                          method.init = method.init, add_topvi = add_topvi,
+                                          lb = FALSE, thin.init = thin.init, part.init = part.init,
+                                          method = method, max.k = max.k, L = ell,
+                                          max.iter = max.iter, eps = eps,
+                                          mini.batch = mini.batch, extra.iter = extra.iter,
+                                          swap_countone = swap_countone,
+                                          suppress.comment = suppress.comment,
+                                          seed = seed, loss = "Binder", a, ...
+      )
+      output_list[[ell]] <- output_wvi
+      wass_vec[ell] <- output_wvi$wass.dist
+      cat(paste("Completed ", ell, "/", L_max, "\n"))
+    }
+  } else if (loss == "omARI"){
+    for (ell in 1:L_max) {
+      output_wvi <- WASABI_multistart(cls.draw, psm,
+                                          multi.start = multi.start, ncores = ncores,
+                                          method.init = method.init, add_topvi = add_topvi,
+                                          lb = FALSE, thin.init = thin.init, part.init = part.init,
+                                          method = method, max.k = max.k, L = ell,
+                                          max.iter = max.iter, eps = eps,
+                                          mini.batch = mini.batch, extra.iter = extra.iter,
+                                          swap_countone = swap_countone,
+                                          suppress.comment = suppress.comment,
+                                          seed = seed, loss = "omARI",a , ...
+      )
+      output_list[[ell]] <- output_wvi
+      wass_vec[ell] <- output_wvi$wass.dist
+      cat(paste("Completed ", ell, "/", L_max, "\n"))
+    }
   }
   return(list(wass_vec = wass_vec, output_list = output_list))
 }
