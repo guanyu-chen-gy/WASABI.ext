@@ -125,7 +125,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                                   extra.iter = NULL,
                                   swap_countone = FALSE,
                                   suppress.comment = TRUE,
-                                  return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI"), a = 1, ...) {
+                                  seed = NULL, loss = c("VI","Binder","omARI"), a = 1, ...) {
   if (!is.null(seed)) {
     if (length(seed) == 1) {
       default_rng <- RNGkind()
