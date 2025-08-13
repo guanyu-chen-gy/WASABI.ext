@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+
 using namespace Rcpp;
 
 //' Compute Variation of Information (VI) distance between two partitions

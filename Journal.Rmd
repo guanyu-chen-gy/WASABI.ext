@@ -116,7 +116,7 @@ However the posterior similarity matrix shows a potential two-cluster pattern, w
 
 ```{r}
 out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,
-                     method.init = "topvi", method = "salso", loss = "Binder", a = 1.3)
+                     method.init = "topvi", method = "salso", loss = "VI", a = 1.3)
 ```
 
 To explore multiple initializations, we can use `WASABI_multistart`.
@@ -130,7 +130,7 @@ out_WASABI_ms <- WASABI_multistart(cls.draw, psm = psm, L = 2,
                                    mini.batch = 250,
                                    max.iter = 10, extra.iter = 5,
                                    method.init = "topvi", method = "salso",
-                                   loss = "Binder", a = 1.2)
+                                   loss = "VI", a = 1.3)
 ```
 
 We should use the solution achieving the smallest Wasserstein distance (`wass.dist`):

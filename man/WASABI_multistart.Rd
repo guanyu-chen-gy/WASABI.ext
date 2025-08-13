@@ -10,11 +10,11 @@ WASABI_multistart(cls.draw = NULL, psm = NULL, multi.start = 10, ncores = 1,
                   add_topvi = TRUE,
                   lb = FALSE, thin.init = NULL, part.init = NULL,
                   method = c("average", "complete", "greedy", "salso"),
-                  max.k = NULL, L = 10, max.iter = 100, eps = 0.0001, mini.batch = 0,
+                  max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
                   extra.iter = NULL,
                   swap_countone = FALSE,
                   suppress.comment = TRUE,
-                  return_psm = TRUE, seed = NULL)
+                  return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI"))
 }
 \arguments{
 \item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points.}
@@ -56,6 +56,8 @@ WASABI_multistart(cls.draw = NULL, psm = NULL, multi.start = 10, ncores = 1,
 \item{return_psm}{Logical, if TRUE, returns the posterior similarity matrix for each particle.}
 
 \item{seed}{An optional integer, or a vector of length \code{multi.start} of integers to set the random seed for reproducibility. If NULL, no seed is set.}
+
+\item{loss}{Character, the loss function to be used in the WASABI algorithm. Options are "VI", "Binder", and "omARI". Defaults to "VI".}
 }
 \value{
 particles A matrix with \code{L} rows, each containing one of the WASABI particles, ordered by decreasing weight.
@@ -130,18 +132,18 @@ cls.draw = est_model$clust
 psm=mcclust::comp.psm(cls.draw+1)
 # if running WASABI once, a non-random initialization is recommended, such as "topvi" or "average"
 out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, multi.start = 10, 
-                                method.init = "++", method = "salso")
+                                method.init = "++", method = "salso", loss = "VI")
 
 # for larger n, it can be faster to use mini.batch
 out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, multi.start = 10, 
                                 method.init = "topvi", method = "salso", 
-                                mini.batch = 200, max.iter = 10, extra.iter = 10)
+                                mini.batch = 200, max.iter = 10, extra.iter = 10, loss = "VI")
                                 
 # Parallel processing is currently supported only on MacOS and Linux systems. 
 # To activate it, set ncores > 1. If you are using Windows, set ncores = 1.
 out_WASABI <- WASABI_multistart(cls.draw, psm = psm, L = 2, 
                                 ncores = 3, multi.start = 20,
-                                method.init = "topvi", method = "salso")
+                                method.init = "topvi", method = "salso", loss = "VI")
 }
 }
 \seealso{

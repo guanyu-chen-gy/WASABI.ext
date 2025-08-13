@@ -36,7 +36,7 @@ devtools::install_github("cecilia-balocchi/WASABI")
 ## Examples
 
 ```{r message = FALSE}
-library(WASABI)
+library(WASABI.ext)
 library(BNPmix)
 library(mcclust)
 library(salso)
@@ -92,8 +92,8 @@ superheat::superheat(psm,
 However the posterior similarity matrix shows a potential two-cluster pattern, with moderate posterior uncertainty. Let's use WASABI to summarize the posterior with multiple point estimates:
 
 ```{r}
-out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,
-                     method.init = "topvi", method = "salso")
+out_WASABI <- WASABI.ext::WASABI(cls.draw, psm = psm, L = 2,
+                     method.init = "topvi", method = "salso", loss = "Binder")
 ```
 
 To explore multiple initializations, we can use `WASABI_multistart`.
@@ -102,11 +102,11 @@ We can also use the `mini.batch` option, to run the algorithm on a subset of the
 Note, the multi-core option relies on `parallel::mclapply` which only works on MacOS and Linux. When running `WASABI_multistart` on Windows machines, set `ncores = 1` (which is also the default).
 
 ```{r}
-out_WASABI_ms <- WASABI_multistart(cls.draw, psm = psm, L = 2,
+out_WASABI_ms <- WASABI.ext::WASABI_multistart(cls.draw, psm = psm, L = 2,
                                    multi.start = 20, ncores = 4,
                                    mini.batch = 250,
                                    max.iter = 10, extra.iter = 5,
-                                   method.init = "++", method = "salso")
+                                   method.init = "++", method = "salso", loss = "VI")
 ```
 
 We should use the solution achieving the smallest Wasserstein distance (`wass.dist`):

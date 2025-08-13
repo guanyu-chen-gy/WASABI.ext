@@ -12,7 +12,7 @@ elbow(cls.draw, L_max = 10, psm = NULL,
       max.k = NULL, max.iter = 20, eps = 0.01,
       mini.batch = NULL, extra.iter = NULL,
       swap_countone = FALSE,
-      suppress.comment = TRUE, seed = NULL)
+      suppress.comment = TRUE, seed = NULL, loss = c("VI","Binder","omARI"))
 }
 \arguments{
 \item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points.}
@@ -52,6 +52,8 @@ elbow(cls.draw, L_max = 10, psm = NULL,
 \item{suppress.comment}{Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.}
 
 \item{seed}{An optional integer to set the random seed for reproducibility. If NULL, no seed is set.}
+
+\item{loss}{Character, the type of loss function to use. Options are "VI" (default), "Binder", and "omARI". The choice of loss function affects the Wasserstein distance calculation.}
 }
 \value{
 A list with elements:

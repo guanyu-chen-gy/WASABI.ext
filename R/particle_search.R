@@ -230,7 +230,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         vi.part.new, L,
         assign.vi, counts, part.evi_new,
         cls.draw_relab, Ks.draw,
-        part_new_relab, Ks.part_new, loss == "Binder"
+        part_new_relab, Ks.part_new, loss = "Binder"
       )
       part_new_relab <- out$part_new_relab
       counts <- out$counts
