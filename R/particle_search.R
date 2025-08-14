@@ -632,7 +632,7 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
 
 minVI_hclust <- function(cls.draw_relab, Ks.draw,
                          psm, method,
-                         max.k, lb, L = 1) {
+                         max.k, lb, L = 1, a = 1) {
   hclust_K <- stats::hclust(stats::as.dist(1 - psm), method = method)
   cls.hclust <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust_K, k = x)))
   if (lb) {
@@ -645,7 +645,8 @@ minVI_hclust <- function(cls.draw_relab, Ks.draw,
         cls = cls.hclust_relab[i, ],
         cls.draw = cls.draw_relab,
         Ks = Ks.hclust[i],
-        Ks.draw = Ks.draw
+        Ks.draw = Ks.draw,
+        a = a
       )
     })
   }
@@ -663,7 +664,7 @@ minVI_hclust <- function(cls.draw_relab, Ks.draw,
 
 minB_hclust <- function(cls.draw_relab, Ks.draw,
                         psm, method,
-                        max.k, lb, L = 1) {
+                        max.k, lb, L = 1, a = 1) {
   hclust_K <- stats::hclust(stats::as.dist(1 - psm), method = method)
   cls.hclust <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust_K, k = x)))
   if (lb) {
@@ -676,7 +677,8 @@ minB_hclust <- function(cls.draw_relab, Ks.draw,
         cls = cls.hclust_relab[i, ],
         cls.draw = cls.draw_relab,
         Ks = Ks.hclust[i],
-        Ks.draw = Ks.draw
+        Ks.draw = Ks.draw,
+        a = a
       )
     })
   }
