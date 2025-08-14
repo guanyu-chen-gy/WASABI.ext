@@ -2,7 +2,7 @@
 #'
 #' Creates a scatter plot showing the mean and range (min/max) of data within clusters for each particle, colored by cluster.
 #'
-#' @param output_wvi A list containing at least elements \code{particles} (matrix) and \code{part.weights} (numeric vector) from WASABI output.
+#' @param output_wvi A list containing at least elements \code{particles} (matrix) from WASABI output.
 #' @param Y Numeric vector of data.
 #' @return A ggplot2 plot object.
 #' @export
@@ -17,8 +17,7 @@ ggrange <- function(output_wvi, Y) {
     }
   }
   particles <- output_wvi$particles
-  weights <- output_wvi$part.weights
-  K <- length(weights)
+  K <- nrow(particles)
   ka <- c()
   cla <- c()
   meanxa <- c()
@@ -49,7 +48,7 @@ ggrange <- function(output_wvi, Y) {
 #'
 #' Shows ggrange plot and a histogram of the data together.
 #'
-#' @param output_wvi A list containing at least elements \code{particles} (matrix) and \code{part.weights} (numeric vector) from WASABI output.
+#' @param output_wvi A list containing at least elements \code{particles} (matrix) from WASABI output.
 #' @param Y Numeric vector of data.
 #' @return If gridExtra is available, NULL (the plots are drawn). Otherwise, a list of plot objects.
 #' @export
@@ -100,7 +99,7 @@ ggscatter <- function(cls, Y) {
       stop("Y must be a numeric vector, not a matrix or data frame.")
     }
   }
-  n <- ifelse(is.null(dim(Y)), length(Y), nrow(Y)) 
+  n <- ifelse(is.null(dim(Y)), length(Y), nrow(Y))
   df_true <- data.frame(
     x = as.numeric(Y),
     cl = as.numeric(cls),
@@ -134,10 +133,10 @@ ggscatter_grid <- function(output_wvi, Y) {
       stop("Y must be a numeric vector, not a matrix or data frame.")
     }
   }
-  n <- ifelse(is.null(dim(Y)), length(Y), nrow(Y)) 
-  
+  n <- ifelse(is.null(dim(Y)), length(Y), nrow(Y))
+
   particles <- output_wvi$particles
-  weights <- output_wvi$part.weights
+  weights <- round(output_wvi$part.weights, 2)
   y <- 0.2 * stats::rnorm(n)
   df <- data.frame(
     x = NULL,
@@ -182,7 +181,7 @@ ggscatter_grid <- function(output_wvi, Y) {
 #' ggsummary(output_wvi)
 #' }
 ggsummary <- function(output_wvi, title = NULL, legend = "right") {
-  
+
   ind <- sort(output_wvi$part.weights, index.return = TRUE, decreasing = TRUE)
   K <- length(output_wvi$part.weights)
   particles <- as.factor(seq_len(K))
@@ -226,7 +225,7 @@ ggsummary <- function(output_wvi, title = NULL, legend = "right") {
     ggplot2::facet_wrap(ggplot2::vars(.data$type), scales = "free") +
     ggplot2::theme_bw() +
     ggplot2::theme(axis.title.x = ggplot2::element_blank())
-  
+
   if (legend == "bottom") {
     p <- p + ggplot2::theme(legend.position = "bottom")
   }
@@ -350,7 +349,7 @@ ggscatter_grid2d <- function(output_wvi, Y, title = NULL, legend = "right") {
     }
   }
   particles <- output_wvi$particles
-  weights <- output_wvi$part.weights
+  weights <- round(output_wvi$part.weights, 2)
   df <- data.frame(
     x1 = NULL,
     x2 = NULL,
@@ -370,20 +369,32 @@ ggscatter_grid2d <- function(output_wvi, Y, title = NULL, legend = "right") {
   }
   df$Cluster <- as.factor(df$Cluster)
 
-  p <- ggplot2::ggplot(df) +
-    ggplot2::geom_point(
-      ggplot2::aes(
-        x = .data$x1,
-        y = .data$x2,
-        color = .data$Cluster,
-        shape = .data$Cluster
+  if(length(unique(df$Cluster))<=25){
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster,
+          shape = .data$Cluster
+        )
+      ) + scale_shape_manual(values = c(1:25))
+  } else {
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster
+        )
       )
-    ) +
+  }
+
+  p <- p +
     ggplot2::ylab(expression("x"[2])) +
     ggplot2::xlab(expression("x"[1])) +
     ggplot2::facet_wrap(ggplot2::vars(.data$ID)) +
     ggplot2::theme_bw()
-
   if (legend == "bottom") {
     p <- p + ggplot2::theme(legend.position = "bottom")
   }
@@ -412,14 +423,13 @@ ggscatter_pca <- function(output_wvi, Y, title = NULL) {
   } else {
     if(length(dim(Y))==1){
       stop("Data must be d-dimensional with d > 2.")
-    } 
+    }
   }
 
   out_pc <- stats::prcomp(Y)
   Ypc <- out_pc$x
   particles <- output_wvi$particles
-  weights <- output_wvi$part.weights
-
+  weights <- round(output_wvi$part.weights, 2)
   df <- data.frame(
     x1 = NULL,
     x2 = NULL,
@@ -439,8 +449,28 @@ ggscatter_pca <- function(output_wvi, Y, title = NULL) {
   }
   df$Cluster <- as.factor(df$Cluster)
 
-  p <- ggplot2::ggplot(df) +
-    ggplot2::geom_point(ggplot2::aes(x = .data$x1, y = .data$x2, color = .data$Cluster)) +
+  if(length(unique(df$Cluster))<=25){
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster,
+          shape = .data$Cluster
+        )
+      ) + scale_shape_manual(values = c(1:25))
+  } else {
+    p <- ggplot2::ggplot(df) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          x = .data$x1,
+          y = .data$x2,
+          color = .data$Cluster
+        )
+      )
+  }
+
+  p <- p +
     ggplot2::ylab(expression("PC"[2])) +
     ggplot2::xlab(expression("PC"[1])) +
     ggplot2::facet_wrap(ggplot2::vars(.data$ID)) +
@@ -451,4 +481,5 @@ ggscatter_pca <- function(output_wvi, Y, title = NULL) {
   }
   return(p)
 }
+
 
