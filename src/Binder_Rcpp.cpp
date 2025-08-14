@@ -11,7 +11,7 @@ using namespace Rcpp;
 //' @param K2 An integer, specifying the number of unique clusters in \code{cl2}.
 //' @return The VI distance between \code{cl1} and \code{cl2}.
 // [[Rcpp::export]]
-double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2){
+double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2, double a = 1.0) {
   int n=c1.length();
   
   NumericMatrix ctab(K1,K2);
@@ -30,12 +30,12 @@ double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2){
   double f = 0.0;
   for(int k1 = 0; k1 < K1; k1++){
     if(r[k1] > 0){
-      f += pow((r[k1]/n),2);
+      f += a * pow((r[k1]/n),2);
     }
   }
   for(int k2 = 0; k2 < K2; k2++){
     if(c[k2]>0){
-      f += pow((c[k2]/n),2);
+      f += (2 - a) * pow((c[k2]/n),2);
     }
   }
   for(int k1 = 0; k1 < K1; k1++){
@@ -56,7 +56,7 @@ double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2){
 //' @param K2s An integer vector, specifying the number of clusters in each row of \code{cls2}. Must have length equal to the number of rows in \code{cls2}.
 //' @return A matrix containing the VI distance between each row of \code{cls1} and \code{cls2}.
 // [[Rcpp::export]]
-NumericMatrix Binder_Rcpp(NumericMatrix cls1,NumericMatrix cls2,NumericVector K1s,NumericVector K2s) {
+NumericMatrix Binder_Rcpp(NumericMatrix cls1,NumericMatrix cls2,NumericVector K1s,NumericVector K2s, double a = 1.0) {
 
   if(cls1.ncol() != cls2.ncol()){
     stop("number of data points must be the same");
@@ -69,7 +69,7 @@ NumericMatrix Binder_Rcpp(NumericMatrix cls1,NumericMatrix cls2,NumericVector K1
   
   for (int i = 0; i < M1; i++) {
     for(int j = 0; j < M2; j++){
-      output(i,j) = Binder_compute_Rcpp(cls1(i,_),cls2(j,_),K1s[i],K2s[j]);
+      output(i,j) = Binder_compute_Rcpp(cls1(i,_),cls2(j,_),K1s[i],K2s[j],a);
     }
   }
   
