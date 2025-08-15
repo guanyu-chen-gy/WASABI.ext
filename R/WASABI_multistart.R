@@ -166,7 +166,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                         suppress.comment,
                         return_psm,
                         seed = NULL,
-                        loss = "VI", a , ...
+                        loss = "VI", a = a , ...
       )
       return(out)
     }
@@ -189,7 +189,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                                                suppress.comment,
                                                return_psm,
                                                seed = seeds[g],
-                                               loss = "VI", a, ...
+                                               loss = "VI", a = a, ...
                                     )
                                   },
                                   mc.cores = ncores
@@ -211,7 +211,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                         suppress.comment,
                         return_psm,
                         seed = NULL,
-                        loss = "Binder", a, ...
+                        loss = "Binder", a = a, ...
       )
       return(out)
     }
@@ -234,7 +234,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                                                suppress.comment,
                                                return_psm,
                                                seed = seeds[g],
-                                               loss = "Binder", a ,...
+                                               loss = "Binder", a = a ,...
                                     )
                                   },
                                   mc.cores = ncores
@@ -256,7 +256,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                         suppress.comment,
                         return_psm,
                         seed = NULL,
-                        loss = "omARI", a ,...
+                        loss = "omARI", a = a,...
       )
       return(out)
     }
@@ -279,7 +279,7 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
                                                suppress.comment,
                                                return_psm,
                                                seed = seeds[g],
-                                               loss = "omARI", a, ...
+                                               loss = "omARI", a = a, ...
                                     )
                                   },
                                   mc.cores = ncores

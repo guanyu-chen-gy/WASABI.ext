@@ -75,13 +75,13 @@ psm.meet <- function(cls.m, output_wvi) {
 #' @param Zhat Integer vector: length-n partition to compare.
 #' @return Numeric vector of length n: expected VI contribution for \code{Zhat} (each element).
 #' @export
-evi.contribution <- function(Zmat, Zhat) {
+evi.contribution <- function(Zmat, Zhat, a = 1) {
   n <- base::length(Zhat)
   S <- base::dim(Zmat)[1]
   evi.i <- function(i, Zmat, Zhat) {
-    c <- 1 / n * log2(base::sum(Zhat == Zhat[i]) / n) +
+    c <- 1 / n * a * log2(base::sum(Zhat == Zhat[i]) / n) +
       base::sum(base::apply(Zmat, 1, function(x) {
-        1 / n * log2(base::sum(x == x[i]) / n)
+        1 / n * ( 2 - a ) *log2(base::sum(x == x[i]) / n)
       })) / S -
       2 / n * base::sum(base::apply(Zmat, 1, function(x, y) {
         log2(base::sum((x == x[i]) & (y == y[i])) / n)
@@ -99,12 +99,12 @@ evi.contribution <- function(Zmat, Zhat) {
 #' @param Zhat Integer vector: partition to compare.
 #' @return Numeric vector of length n: weighted expected VI contribution for \code{Zhat} (each element).
 #' @export
-evi.wd.contribution <- function(output_wvi, Zhat) {
+evi.wd.contribution <- function(output_wvi, Zhat, a = 1) {
   n <- base::length(Zhat)
   evi.i <- function(i, Zmat, Zhat, w) {
-    c <- 1 / n * log2(base::sum(Zhat == Zhat[i]) / n) +
+    c <- 1 / n * a * log2(base::sum(Zhat == Zhat[i]) / n) +
       base::sum(w * base::apply(Zmat, 1, function(x) {
-        1 / n * log2(base::sum(x == x[i]) / n)
+        1 / n * ( 2 - a) * log2(base::sum(x == x[i]) / n)
       })) -
       2 / n * base::sum(w * base::apply(Zmat, 1, function(x, y) {
         log2(base::sum((x == x[i]) & (y == y[i])) / n)
@@ -122,11 +122,11 @@ evi.wd.contribution <- function(output_wvi, Zhat) {
 #' @param Z2 Integer or factor vector: length-n cluster labels for partition 2.
 #' @return Numeric vector of length n: VI contribution for each observation.
 #' @export
-vi.contribution <- function(Z1, Z2) {
+vi.contribution <- function(Z1, Z2, a = 1) {
   n <- base::length(Z1)
   vi.i <- function(i, Z1, Z2) {
-    c <- 1 / n * log2(base::sum(Z1 == Z1[i]) / n) +
-      1 / n * log2(base::sum(Z2 == Z2[i]) / n) -
+    c <- 1 / n * a * log2(base::sum(Z1 == Z1[i]) / n) +
+      1 / n * ( 2 - a ) * log2(base::sum(Z2 == Z2[i]) / n) -
       2 / n * log2(base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)
     c
   }
@@ -141,12 +141,12 @@ vi.contribution <- function(Z1, Z2) {
 #' @param Z2 Integer or factor vector: length-n cluster labels for partition 2.
 #' @return Numeric vector of length n: VI contribution for each observation.
 #' @export
-binder.contribution <- function(Z1, Z2) {
+binder.contribution <- function(Z1, Z2, a = 1) {
   n <- base::length(Z1)
   vi.i <- function(i, Z1, Z2) {
-    c <- (base::sum(Z1 == Z1[i]) / n)^2 +
-      (base::sum(Z2 == Z2[i]) / n)^2 -
-      2 * (base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)^2
+    c <- a * (base::sum(Z1 == Z1[i]) / n)^2 +
+     (2 - a) * (base::sum(Z2 == Z2[i]) / n )^2 -
+      (base::sum((Z1 == Z1[i]) & (Z2 == Z2[i])) / n)^2
     c
   }
   base::unlist(base::lapply(seq_len(n), vi.i, Z1 = Z1, Z2 = Z2))
@@ -160,12 +160,12 @@ binder.contribution <- function(Z1, Z2) {
 #' @param Zhat Integer vector: partition to compare.
 #' @return Numeric vector of length n: weighted expected VI contribution for \code{Zhat} (each element).
 #' @export
-eb.wd.contribution <- function(output_wvi, Zhat) {
+eb.wd.contribution <- function(output_wvi, Zhat, a = 1) {
   n <- base::length(Zhat)
   evi.i <- function(i, Zmat, Zhat, w) {
-    c <-  (base::sum(Zhat == Zhat[i]) / n)^2 +
+    c <-  a * (base::sum(Zhat == Zhat[i]) / n)^2 +
       base::sum(w * base::apply(Zmat, 1, function(x) {
-        (base::sum(x == x[i]) / n)^2
+       (2 - a) * (base::sum(x == x[i]) / n)^2
       })) -
       2 * base::sum(w * base::apply(Zmat, 1, function(x, y) {
         (base::sum((x == x[i]) & (y == y[i])) / n)^2
@@ -183,12 +183,12 @@ eb.wd.contribution <- function(output_wvi, Zhat) {
 #' @param Zhat Integer vector: length-n partition to compare.
 #' @return Numeric vector of length n: expected VI contribution for \code{Zhat} (each element).
 #' @export
-eb.contribution <- function(Zmat, Zhat) {
+eb.contribution <- function(Zmat, Zhat, a = 1) {
   n <- base::length(Zhat)
   S <- base::dim(Zmat)[1]
   evi.i <- function(i, Zmat, Zhat) {
-    c <- (base::sum(Zhat == Zhat[i]) / n)^2 +
-      base::sum(base::apply(Zmat, 1, function(x) {
+    c <- a * (base::sum(Zhat == Zhat[i]) / n)^2 +
+      ( 2 - a ) * base::sum(base::apply(Zmat, 1, function(x) {
         (base::sum(x == x[i]) / n)^2
       })) / S -
       2  * base::sum(base::apply(Zmat, 1, function(x, y) {

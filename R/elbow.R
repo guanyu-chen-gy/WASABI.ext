@@ -124,7 +124,7 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
                                           mini.batch = mini.batch, extra.iter = extra.iter,
                                           swap_countone = swap_countone,
                                           suppress.comment = suppress.comment,
-                                          seed = seed, loss = "VI", a, ...
+                                          seed = seed, loss = "VI", a = a, ...
       )
       output_list[[ell]] <- output_wvi
       wass_vec[ell] <- output_wvi$wass.dist
@@ -141,7 +141,7 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
                                           mini.batch = mini.batch, extra.iter = extra.iter,
                                           swap_countone = swap_countone,
                                           suppress.comment = suppress.comment,
-                                          seed = seed, loss = "Binder", a, ...
+                                          seed = seed, loss = "Binder", a = a, ...
       )
       output_list[[ell]] <- output_wvi
       wass_vec[ell] <- output_wvi$wass.dist
@@ -158,7 +158,7 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
                                           mini.batch = mini.batch, extra.iter = extra.iter,
                                           swap_countone = swap_countone,
                                           suppress.comment = suppress.comment,
-                                          seed = seed, loss = "omARI",a , ...
+                                          seed = seed, loss = "omARI",a = a, ...
       )
       output_list[[ell]] <- output_wvi
       wass_vec[ell] <- output_wvi$wass.dist
