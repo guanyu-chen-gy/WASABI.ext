@@ -15,7 +15,7 @@
 #'        method = c("average", "complete", "greedy", "salso"),
 #'        max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
 #'        extra.iter = NULL,swap_countone = FALSE,suppress.comment = TRUE,
-#'        return_psm = FALSE,seed = NULL, loss = c("VI","Binder","omARI"))
+#'        return_psm = FALSE,seed = NULL, loss = c("VI","Binder","omARI"),a=1, ...)
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
 #' @param psm The posterior similarity matrix obtained from MCMC samples of partitions stored in \code{cls.draw}.
@@ -151,6 +151,10 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
     stop("omARI loss is only defined for a = 1")
   }
 
+  if (method == "greedy" & a != 1) {
+    stop("Greedy method is only defined for a = 1")
+  }
+
   if (!is.null(seed)) {
     set.seed(seed)
   }
@@ -179,18 +183,22 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       if (method == "average" | method == "complete") {
         out <- minVI_hclust(cls.draw_relab, Ks.draw,
                             psm, method, max.k, lb,
-                            L = 1
+                            L = 1, a = a
         )
         part[L, ] <- out$part
         part.evi[L] <- out$evi
       }
       if (method == "greedy") {
+        if ( a  == 1){
         output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
                                                 par =
                                                   list(Kup = max.k, loss_type = "VI")
         ) # initializing part is randomly sampled
         part[L, ] <- output_minepl$decision
         part.evi[L] <- output_minepl$EPL
+        } else {
+          stop("Greedy method is only defined for a = 1")
+        }
       }
       if (method == "salso") {
         output_salso <- salso::salso(x = cls.draw_relab, loss = VI(a = a), ...)
@@ -212,18 +220,22 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       if (method == "average" | method == "complete") {
         out <- minB_hclust(cls.draw_relab, Ks.draw,
                            psm, method, max.k, lb,
-                           L = 1
+                           L = 1, a = a
         )
         part[L, ] <- out$part
         part.evi[L] <- out$evi
       }
       if (method == "greedy") {
+        if ( a == 1){
         output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
                                                 par =
                                                   list(Kup = max.k, loss_type = "B")
         ) # initializing part is randomly sampled
         part[L, ] <- output_minepl$decision
         part.evi[L] <- output_minepl$EPL
+        } else {
+          stop("Greedy method is only defined for a = 1")
+        }
       }
       if (method == "salso") {
         output_salso <- salso::salso(x = cls.draw_relab, loss = binder(a = a),...)
@@ -286,7 +298,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
         cls.draw_relab[seq(1, S, thin.init), ],
         Ks.draw[seq(1, S, thin.init)],
         psm, "average",
-        max.k, lb, L
+        max.k, lb, L, a = a
       )
       part <- out$part
       part.evi <- out$evi
@@ -309,7 +321,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
         cls.draw_relab[seq(1, S, thin.init), ],
         Ks.draw[seq(1, S, thin.init)],
         psm, "complete",
-        max.k, lb, L
+        max.k, lb, L, a = a
       )
       part <- out$part
       part.evi <- out$evi
@@ -338,7 +350,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
           function(i) {
             EVI_Rcpp(
               cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
             )
           }
         )
@@ -367,7 +379,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
       K.part <- max(part[1, ]) + 1
       for (k in 2:L) {
-        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
+        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
         tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
         vi.init <- apply(tmp, 1, min)
         ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
@@ -389,7 +401,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
           function(i) {
             EVI_Rcpp(
               cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
             )
           }
         )
@@ -440,7 +452,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
       K.part <- max(part[1, ]) + 1
       for (k in 2:L) {
-        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
+        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
         tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
         vi.init <- apply(tmp, 1, min)
         ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
@@ -462,7 +474,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
           function(i) {
             EVI_Rcpp(
               cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
             )
           }
         )
@@ -503,7 +515,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
         cls.draw_relab[seq(1, S, thin.init), ],
         Ks.draw[seq(1, S, thin.init)],
         psm, "average",
-        max.k, lb, L
+        max.k, lb, L, a = a
       )
       part <- out$part
       part.evi <- out$evi
@@ -526,7 +538,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
         cls.draw_relab[seq(1, S, thin.init), ],
         Ks.draw[seq(1, S, thin.init)],
         psm, "complete",
-        max.k, lb, L
+        max.k, lb, L, a = a
       )
       part <- out$part
       part.evi <- out$evi
@@ -555,7 +567,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
           function(i) {
             EB_Rcpp(
               cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
             )
           }
         )
@@ -584,7 +596,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
       K.part <- max(part[1, ]) + 1
       for (k in 2:L) {
-        tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
+        tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
         tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
         vi.init <- apply(tmp, 1, min)
         ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
@@ -606,7 +618,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
           function(i) {
             EB_Rcpp(
               cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
             )
           }
         )
@@ -657,7 +669,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
       K.part <- max(part[1, ]) + 1
       for (k in 2:L) {
-        tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
+        tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
         tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
         vi.init <- apply(tmp, 1, min)
         ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
@@ -679,7 +691,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
           function(i) {
             EB_Rcpp(
               cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
             )
           }
         )
@@ -1056,7 +1068,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
 
       out <- particle_search(
         cls.draw_relab[mb.samp, ], Ks.draw[mb.samp],
-        part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, (iter == 1), loss = "Binder",a, ...
+        part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, (iter == 1), loss = "Binder",a = 1, ...
       )
 
       diff <- abs(sum(part.evi * counts / (mini.batch + (mini.batch == 0) * S)) - sum(out$evi * out$counts / (mini.batch + (mini.batch == 0) * S)))
@@ -1086,7 +1098,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       while (iter <= (max.iter + extra.iter) & diff > eps) {
         out <- particle_search(
           cls.draw_relab, Ks.draw,
-          part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, loss = "Binder", a ,...
+          part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, loss = "Binder", a = a,...
         )
 
         diff <- abs(sum(part.evi * counts / S) - sum(out$evi * out$counts / S))
@@ -1172,7 +1184,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
       while (iter <= (max.iter + extra.iter) & diff > eps) {
         out <- particle_search(
           cls.draw_relab, Ks.draw,
-          part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, loss = "omARI", a, ...
+          part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, loss = "omARI", ...
         )
 
         diff <- abs(sum(part.evi * counts / S) - sum(out$evi * out$counts / S))
