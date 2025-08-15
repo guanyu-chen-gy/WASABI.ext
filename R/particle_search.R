@@ -494,7 +494,7 @@ check_equal_particles <- function(vi.part.new, L,
 
 test_change <- function(l, part_relab, cls.draw_relab.mb,
                             viall, assign.vi, counts, part.evi,
-                            Ks.draw.mb, Ks.part, loss = c("VI","Binder","omARI")) {
+                            Ks.draw.mb, Ks.part, loss = c("VI","Binder","omARI"), a = 1) {
   L <- nrow(part_relab)
   S_temp <- nrow(cls.draw_relab.mb)
 
@@ -509,7 +509,7 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
   if ( loss == "VI"){
     VI_new_tmp <- sum(VI_Rcpp(
       part_relab[l_new, , drop = FALSE], cls.draw_relab.mb[current_i, , drop = FALSE],
-      Ks.part[l_new], Ks.draw.mb[current_i]
+      Ks.part[l_new], Ks.draw.mb[current_i], a = a
     ))
     part.evi[l_new] <- ((counts[l_new] - 1) * part.evi[l_new] + VI_new_tmp) / counts[l_new]
     part.evi[l] <- 0 # because it's one element
@@ -528,7 +528,7 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
     ##--------------------------------------------------------------
     VI_new_tmp <- sum(VI_Rcpp(
       part_relab[l_old, , drop = FALSE], cls.draw_relab.mb[new_i, , drop = FALSE],
-      Ks.part[l_old], Ks.draw.mb[new_i]
+      Ks.part[l_old], Ks.draw.mb[new_i], a = a
     ))
     part.evi[l_old] <- ((counts[l_new] + 1) * part.evi[l_old] - VI_new_tmp) / counts[l_new]
 
@@ -538,7 +538,7 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
 
     # update viall for the l column
     ##------------------------------------------------------------
-    viall_l <- VI_Rcpp(cls.draw_relab.mb, part_relab[l, , drop = FALSE], Ks.draw.mb, Ks.part[l])
+    viall_l <- VI_Rcpp(cls.draw_relab.mb, part_relab[l, , drop = FALSE], Ks.draw.mb, Ks.part[l], a = a)
     viall[, l] <- as.numeric(viall_l)
 
     wass_dist <- sum(part.evi * counts / S_temp)
@@ -550,7 +550,7 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
   } else if ( loss == "Binder"){
     VI_new_tmp <- sum(Binder_Rcpp(
       part_relab[l_new, , drop = FALSE], cls.draw_relab.mb[current_i, , drop = FALSE],
-      Ks.part[l_new], Ks.draw.mb[current_i]
+      Ks.part[l_new], Ks.draw.mb[current_i], a = a
     ))
     part.evi[l_new] <- ((counts[l_new] - 1) * part.evi[l_new] + VI_new_tmp) / counts[l_new]
     part.evi[l] <- 0 # because it's one element
@@ -568,7 +568,7 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
     # removing new_i from l_old
     VI_new_tmp <- sum(Binder_Rcpp(
       part_relab[l_old, , drop = FALSE], cls.draw_relab.mb[new_i, , drop = FALSE],
-      Ks.part[l_old], Ks.draw.mb[new_i]
+      Ks.part[l_old], Ks.draw.mb[new_i], a = a
     ))
     part.evi[l_old] <- ((counts[l_new] + 1) * part.evi[l_old] - VI_new_tmp) / counts[l_new]
 
@@ -577,7 +577,7 @@ test_change <- function(l, part_relab, cls.draw_relab.mb,
     Ks.part[l] <- Ks.draw.mb[new_i]
 
     # update viall for the l column
-    viall_l <- Binder_Rcpp(cls.draw_relab.mb, part_relab[l, , drop = FALSE], Ks.draw.mb, Ks.part[l])
+    viall_l <- Binder_Rcpp(cls.draw_relab.mb, part_relab[l, , drop = FALSE], Ks.draw.mb, Ks.part[l], a = a)
     viall[, l] <- as.numeric(viall_l)
 
     wass_dist <- sum(part.evi * counts / S_temp)
