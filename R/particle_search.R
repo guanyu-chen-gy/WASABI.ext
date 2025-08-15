@@ -8,7 +8,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
   if ( loss == "VI"){
     # ------------------------------------------ N-update step ------------------------------------------
 
-    viall <- VI_Rcpp(cls.draw_relab, part_relab, Ks.draw, Ks.part)
+    viall <- VI_Rcpp(cls.draw_relab, part_relab, Ks.draw, Ks.part, a = a)
     viall[viall < 0] <- 0 # this is to correct numerical errors
 
     # Assign each sample to nearest center
@@ -57,7 +57,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         if (swap_countone) {
           tmp <- test_change(
             l, part_new_relab, cls.draw_relab, viall, assign.vi, counts,
-            part.evi_new, Ks.draw, Ks.part_new, loss = "VI"
+            part.evi_new, Ks.draw, Ks.part_new, loss = "VI", a = a
           )
           if (tmp$wass_dist < sum(part.evi_new * counts / S)) {
             counts <- tmp$counts
@@ -76,16 +76,19 @@ particle_search <- function(cls.draw_relab, Ks.draw,
           ##--------------------------------------------------------------------------------------------
           out <- minVI_hclust(cls.draw_relab[assign.vi == l, ], Ks.draw[assign.vi == l],
                               psm_K, method, max.k, lb,
-                              L = 1
+                              L = 1, a = a
           )
           part_new[l, ] <- out$part
           part.evi_new[l] <- out$evi
         }
         if (method == "greedy") {
-          ##----------------------------------------------------------------
+          if  ( a == 1 ){
           output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab[assign.vi == l, ], list(decision_init = part_new[l, ], loss_type = "VI"))
           part_new[l, ] <- output_minepl$decision
           part.evi_new[l] <- output_minepl$EPL
+          } else {
+            stop("Greedy method is not implemented for Generalized VI loss function yet.")
+          }
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
@@ -109,7 +112,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         vi.part.new, L,
         assign.vi, counts, part.evi_new,
         cls.draw_relab, Ks.draw,
-        part_new_relab, Ks.part_new,loss = "VI"
+        part_new_relab, Ks.part_new,loss = "VI", a = a
       )
       part_new_relab <- out$part_new_relab
       counts <- out$counts
@@ -129,7 +132,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
   } else if (loss == "Binder"){
     # ------------------------------------------ N-update step ------------------------------------------
 
-    viall <- Binder_Rcpp(cls.draw_relab, part_relab, Ks.draw, Ks.part)
+    viall <- Binder_Rcpp(cls.draw_relab, part_relab, Ks.draw, Ks.part, a = a)
     viall[viall < 0] <- 0 # this is to correct numerical errors
 
     # Assign each sample to nearest center
@@ -178,7 +181,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         if (swap_countone) {
           tmp <- test_change(
             l, part_new_relab, cls.draw_relab, viall, assign.vi, counts,
-            part.evi_new, Ks.draw, Ks.part_new, loss = "Binder"
+            part.evi_new, Ks.draw, Ks.part_new, loss = "Binder", a = a
           )
           if (tmp$wass_dist < sum(part.evi_new * counts / S)) {
             counts <- tmp$counts
@@ -190,23 +193,27 @@ particle_search <- function(cls.draw_relab, Ks.draw,
           }
         }
       } else {
-        # ------------------------------------------ VI-search step ------------------------------------------
+        # ------------------------------------------ Binder-search step ------------------------------------------
 
         if (method == "average" | method == "complete") {
           psm_K <- mcclust::comp.psm(matrix(1 + cls.draw_relab[assign.vi == l, ], counts[l], ncol(cls.draw_relab)))
           ##--------------------------------------------------------------------------------------------
           out <- minB_hclust(cls.draw_relab[assign.vi == l, ], Ks.draw[assign.vi == l],
                              psm_K, method, max.k, lb,
-                             L = 1
+                             L = 1, a = a
           )
           part_new[l, ] <- out$part
           part.evi_new[l] <- out$evi
         }
         if (method == "greedy") {
+          if ( a  == 1 ){
           ##----------------------------------------------------------------
           output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab[assign.vi == l, ], list(decision_init = part_new[l, ], loss_type = "B"))
           part_new[l, ] <- output_minepl$decision
-          part.evi_new[l] <- output_minepl$EPL
+          part.evi_new[l] <- output_minepl$EPL}
+          else {
+            stop("Greedy method is not implemented for Generalized Binder loss function yet.")
+          }
         }
         if (method == "salso") {
           ##------------------------------------------------------------------
@@ -221,7 +228,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
     Ks.part_new <- apply(part_new_relab, 1, function(x) max(x)) + 1
 
     # If equal particles, then merge equal ones and set others partitions far from unique particles
-    vi.part.new <- Binder_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new)
+    vi.part.new <- Binder_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new, a = a)
     if (sum(vi.part.new[lower.tri(vi.part.new)] == 0) > 0) {
       if (suppress.comment == FALSE) {
         cat("Equal particles found\n")
@@ -230,7 +237,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         vi.part.new, L,
         assign.vi, counts, part.evi_new,
         cls.draw_relab, Ks.draw,
-        part_new_relab, Ks.part_new, loss = "Binder"
+        part_new_relab, Ks.part_new, loss = "Binder", a = a
       )
       part_new_relab <- out$part_new_relab
       counts <- out$counts
