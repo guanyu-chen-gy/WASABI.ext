@@ -376,7 +376,8 @@ particle_search <- function(cls.draw_relab, Ks.draw,
 check_equal_particles <- function(vi.part.new, L,
                                       assign.vi, counts, part.evi_new,
                                       cls.draw_relab, Ks.draw,
-                                      part_new_relab, Ks.part_new, loss = c("VI","Binder","omARI")) {
+                                      part_new_relab, Ks.part_new,
+                                      loss = c("VI","Binder","omARI"), a = 1) {
   if (loss == "VI"){
     part.ind.eq <- c(1:L)[sapply(1:L, function(k) {
       sum(vi.part.new[k, -k] == 0) > 0
@@ -392,7 +393,7 @@ check_equal_particles <- function(vi.part.new, L,
       assign.vi[all.inds] <- l
       # # Find the furthest ones
       ## -------------------------------------------------------------------------------------------
-      vi.inds <- VI_Rcpp(cls.draw_relab[all.inds, ], matrix(part_new_relab[l, ], nrow = 1), Ks.draw[all.inds], Ks.part_new[l])
+      vi.inds <- VI_Rcpp(cls.draw_relab[all.inds, ], matrix(part_new_relab[l, ], nrow = 1), Ks.draw[all.inds], Ks.part_new[l], a = a)
       svi.inds <- sort(vi.inds, decreasing = TRUE, index.return = TRUE)
       # Set duplicate particles to the furthers
       part_new_relab[part.ind.eq.l[-1], ] <- cls.draw_relab[all.inds, ][svi.inds$ix[1:(length(part.ind.eq.l) - 1)], ]
@@ -405,7 +406,7 @@ check_equal_particles <- function(vi.part.new, L,
       ## --------------------------------------------------------------------
       part.evi_new[l] <- EVI_Rcpp(
         cls = part_new_relab[l, ], cls.draw = cls.draw_relab[assign.vi == l, ],
-        Ks = Ks.part_new[l], Ks.draw = Ks.draw[assign.vi == l]
+        Ks = Ks.part_new[l], Ks.draw = Ks.draw[assign.vi == l], a = a
       )
       part.ind.eq <- setdiff(part.ind.eq, part.ind.eq.l)
     }
@@ -428,7 +429,7 @@ check_equal_particles <- function(vi.part.new, L,
       }))
       assign.vi[all.inds] <- l
       # # Find the furthest ones
-      vi.inds <- Binder_Rcpp(cls.draw_relab[all.inds, ], matrix(part_new_relab[l, ], nrow = 1), Ks.draw[all.inds], Ks.part_new[l])
+      vi.inds <- Binder_Rcpp(cls.draw_relab[all.inds, ], matrix(part_new_relab[l, ], nrow = 1), Ks.draw[all.inds], Ks.part_new[l], a = a)
       svi.inds <- sort(vi.inds, decreasing = TRUE, index.return = TRUE)
       # Set duplicate particles to the furthers
       part_new_relab[part.ind.eq.l[-1], ] <- cls.draw_relab[all.inds, ][svi.inds$ix[1:(length(part.ind.eq.l) - 1)], ]
@@ -441,7 +442,7 @@ check_equal_particles <- function(vi.part.new, L,
       ## --------------------------------------------------------------------
       part.evi_new[l] <- EB_Rcpp(
         cls = part_new_relab[l, ], cls.draw = cls.draw_relab[assign.vi == l, ],
-        Ks = Ks.part_new[l], Ks.draw = Ks.draw[assign.vi == l]
+        Ks = Ks.part_new[l], Ks.draw = Ks.draw[assign.vi == l], a = a
       )
       part.ind.eq <- setdiff(part.ind.eq, part.ind.eq.l)
     }
