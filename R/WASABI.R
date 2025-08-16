@@ -1068,7 +1068,7 @@ WASABI <- function(cls.draw = NULL, psm = NULL,
 
       out <- particle_search(
         cls.draw_relab[mb.samp, ], Ks.draw[mb.samp],
-        part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, (iter == 1), loss = "Binder",a = 1, ...
+        part_relab, Ks.part, part.evi, L, method, swap_countone, max.k, lb, suppress.comment, (iter == 1), loss = "Binder",a = a, ...
       )
 
       diff <- abs(sum(part.evi * counts / (mini.batch + (mini.batch == 0) * S)) - sum(out$evi * out$counts / (mini.batch + (mini.batch == 0) * S)))
