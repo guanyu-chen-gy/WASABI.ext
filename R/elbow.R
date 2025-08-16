@@ -105,11 +105,8 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
   if (is.null(mini.batch) == TRUE) {
     mini.batch <- round(nrow(cls.draw) / 5)
   }
-  if (lb == TRUE & loss == "Binder"){
-    warning("lower bound is not applied for Binder loss")
-  }
-  if (lb == TRUE & loss == "omARI"){
-    warning("lower bound is not applied for omARI loss")
+  if (loss != "VI"){
+    lb = FALSE
   }
   output_list <- list()
   wass_vec <- numeric(L_max)

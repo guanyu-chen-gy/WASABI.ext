@@ -6,8 +6,9 @@
 #' @param assign.vi A vector containing the assignment of each sample \code{cls.draw} to a region of attraction (and the corresponding particle). It is obtained as output from WASABI.
 #' @return The Wasserstein-VI distance between the empirical posterior distribution (supported on the MCMC samples) and the WASABI distribution.
 #' @export
-WD <- function(cls.draw, part, part.weights, assign.vi) {
+WD <- function(cls.draw, part, part.weights, assign.vi, loss = c("VI","Binder","omARI"), a = 1) {
   K <- dim(part)[1]
+  if (loss == "VI"){
   part.evi <- sapply(c(1:K), function(k) {
     EVI_Rcpp(
       cls = (part[k, , drop = FALSE] - 1),
@@ -15,6 +16,23 @@ WD <- function(cls.draw, part, part.weights, assign.vi) {
       Ks = max(part[k, ]),
       Ks.draw = apply(cls.draw[assign.vi == k, , drop = FALSE], 1, max)
     )
-  })
+  })} else if (loss == "Binder"){
+    part.evi <- sapply(c(1:K), function(k) {
+    EB_Rcpp(
+      cls = (part[k, , drop = FALSE] - 1),
+      cls.draw = (cls.draw[assign.vi == k, , drop = FALSE] - 1),
+      Ks = max(part[k, ]),
+      Ks.draw = apply(cls.draw[assign.vi == k, , drop = FALSE], 1, max),
+      a = a
+    )
+  })} else if (loss == "omARI"){
+    part.evi <- sapply(c(1:K), function(k) {
+    EomARI_Rcpp(
+      cls = (part[k, , drop = FALSE] - 1),
+      cls.draw = (cls.draw[assign.vi == k, , drop = FALSE] - 1),
+      Ks = max(part[k, ]),
+      Ks.draw = apply(cls.draw[assign.vi == k, , drop = FALSE], 1, max)
+    )
+  })}
   wass.dist <- sum(part.evi * part.weights)
 }

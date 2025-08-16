@@ -103,7 +103,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
     Ks.part_new <- apply(part_new_relab, 1, function(x) max(x)) + 1
 
     # If equal particles, then merge equal ones and set others partitions far from unique particles
-    vi.part.new <- VI_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new)
+    vi.part.new <- VI_Rcpp(part_new_relab, part_new_relab, Ks.part_new, Ks.part_new, a = a)
     if (sum(vi.part.new[lower.tri(vi.part.new)] == 0) > 0) {
       if (suppress.comment == FALSE) {
         cat("Equal particles found\n")
@@ -355,7 +355,7 @@ particle_search <- function(cls.draw_relab, Ks.draw,
         vi.part.new, L,
         assign.vi, counts, part.evi_new,
         cls.draw_relab, Ks.draw,
-        part_new_relab, Ks.part_new, loss == "omARI"
+        part_new_relab, Ks.part_new, loss = "omARI"
       )
       part_new_relab <- out$part_new_relab
       counts <- out$counts
