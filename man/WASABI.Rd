@@ -5,13 +5,13 @@
 \title{Run the WASABI algorithm once}
 \usage{
 WASABI(cls.draw = NULL, psm = NULL,
-       method.init = c("average", "complete", "fixed", "++", 
+       method.init = c("average", "complete", "fixed", "++",
                        "random_partition", "+++", "topvi"),
        lb = FALSE, thin.init = NULL, part.init = NULL,
        method = c("average", "complete", "greedy", "salso"),
        max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
        extra.iter = NULL,swap_countone = FALSE,suppress.comment = TRUE,
-       return_psm = FALSE,seed = NULL, loss = c("VI","Binder","omARI"))
+       return_psm = FALSE,seed = NULL, loss = c("VI","Binder","omARI"),a=1, ...)
 }
 \arguments{
 \item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points.}

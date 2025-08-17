@@ -4,7 +4,7 @@
 \alias{EB_Rcpp}
 \title{Compute the posterior expected Binder loss (EB) for a partition}
 \usage{
-EB_Rcpp(cls, cls.draw, Ks, Ks.draw)
+EB_Rcpp(cls, cls.draw, Ks, Ks.draw, a = 1)
 }
 \arguments{
 \item{cls}{A vector containing the cluster assignments of $n$ data points, representing the partition with respect to which the EVI is computed.}

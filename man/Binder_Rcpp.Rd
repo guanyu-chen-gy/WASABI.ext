@@ -4,7 +4,7 @@
 \alias{Binder_Rcpp}
 \title{Binder distance between two groups of partitions}
 \usage{
-Binder_Rcpp(cls1, cls2, K1s, K2s)
+Binder_Rcpp(cls1, cls2, K1s, K2s, a = 1)
 }
 \arguments{
 \item{cls1}{A matrix of $n$ columns, where each row contains the 0-indexed cluster labels for n items.}

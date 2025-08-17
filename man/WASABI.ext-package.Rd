@@ -4,12 +4,17 @@
 \name{WASABI.ext-package}
 \alias{WASABI.ext}
 \alias{WASABI.ext-package}
-\title{WASABI.ext: What the Package Does (One Line, Title Case)}
+\title{WASABI.ext: WASserstein Approximation for Bayesian clusterIng}
 \description{
-WASABI provides a tool for summarizing the posterior distribution over clusterings in Bayesian mixture models. The package implements the Wasserstein Approximation for Bayesian clustering (WASABI) algorithm, which identifies multiple representative partitions (“particles”) that capture posterior uncertainty, by finding an approximation of the posterior that minimizes the Wasserstein distance based on the Variation of Information (VI) distance.
+Extended version for WASABI package with other loss functions. (WASABI provides a tool for summarizing the posterior distribution over clusterings in Bayesian mixture models. The package implements the Wasserstein Approximation for Bayesian clustering (WASABI) algorithm, which identifies multiple representative partitions (“particles”) that capture posterior uncertainty, by finding an approximation of the posterior that minimizes the Wasserstein distance based on the Variation of Information (VI) distance.)
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Cecilia Balocchi \email{cecilia.balocchi@ed.ac.uk}
+
+Authors:
+\itemize{
+  \item Sara Wade \email{sara.wade@ed.ac.uk}
+}
 
 }
 \keyword{internal}

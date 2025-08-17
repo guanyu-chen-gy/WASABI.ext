@@ -4,7 +4,7 @@
 \alias{binder.contribution}
 \title{Binder contribution between two partitions}
 \usage{
-binder.contribution(Z1, Z2)
+binder.contribution(Z1, Z2, a = 1)
 }
 \arguments{
 \item{Z1}{Integer or factor vector: length-n cluster labels for partition 1.}

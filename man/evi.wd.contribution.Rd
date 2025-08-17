@@ -4,7 +4,7 @@
 \alias{evi.wd.contribution}
 \title{CExpected VI Contribution (WASABI approximation)}
 \usage{
-evi.wd.contribution(output_wvi, Zhat)
+evi.wd.contribution(output_wvi, Zhat, a = 1)
 }
 \arguments{
 \item{output_wvi}{List: must contain \code{particles} (matrix) and \code{part.weights} (numeric vector).}

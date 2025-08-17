@@ -4,7 +4,7 @@
 \alias{eb.contribution}
 \title{Expected Binder Contribution}
 \usage{
-eb.contribution(Zmat, Zhat)
+eb.contribution(Zmat, Zhat, a = 1)
 }
 \arguments{
 \item{Zmat}{Integer matrix: S rows (samples) by n columns (data points), each row a clustering.}

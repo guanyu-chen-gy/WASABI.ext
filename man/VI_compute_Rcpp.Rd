@@ -4,7 +4,7 @@
 \alias{VI_compute_Rcpp}
 \title{Compute Variation of Information (VI) distance between two partitions}
 \usage{
-VI_compute_Rcpp(c1, c2, K1, K2)
+VI_compute_Rcpp(c1, c2, K1, K2, a = 1)
 }
 \arguments{
 \item{c1}{An integer vector of cluster labels for $n$ items. Should be 0-indexed.}

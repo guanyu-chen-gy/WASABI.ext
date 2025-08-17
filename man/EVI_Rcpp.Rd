@@ -4,7 +4,7 @@
 \alias{EVI_Rcpp}
 \title{Compute the posterior expected Variation of Information (EVI) for a partition}
 \usage{
-EVI_Rcpp(cls, cls.draw, Ks, Ks.draw)
+EVI_Rcpp(cls, cls.draw, Ks, Ks.draw, a = 1)
 }
 \arguments{
 \item{cls}{A vector containing the cluster assignments of $n$ data points, representing the partition with respect to which the EVI is computed.}

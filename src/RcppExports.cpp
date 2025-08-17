@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // Binder_compute_Rcpp
-double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2);
-RcppExport SEXP _WASABI_ext_Binder_compute_Rcpp(SEXP c1SEXP, SEXP c2SEXP, SEXP K1SEXP, SEXP K2SEXP) {
+double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2, double a);
+RcppExport SEXP _WASABI_ext_Binder_compute_Rcpp(SEXP c1SEXP, SEXP c2SEXP, SEXP K1SEXP, SEXP K2SEXP, SEXP aSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,13 +20,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type c2(c2SEXP);
     Rcpp::traits::input_parameter< int >::type K1(K1SEXP);
     Rcpp::traits::input_parameter< int >::type K2(K2SEXP);
-    rcpp_result_gen = Rcpp::wrap(Binder_compute_Rcpp(c1, c2, K1, K2));
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    rcpp_result_gen = Rcpp::wrap(Binder_compute_Rcpp(c1, c2, K1, K2, a));
     return rcpp_result_gen;
 END_RCPP
 }
 // Binder_Rcpp
-NumericMatrix Binder_Rcpp(NumericMatrix cls1, NumericMatrix cls2, NumericVector K1s, NumericVector K2s);
-RcppExport SEXP _WASABI_ext_Binder_Rcpp(SEXP cls1SEXP, SEXP cls2SEXP, SEXP K1sSEXP, SEXP K2sSEXP) {
+NumericMatrix Binder_Rcpp(NumericMatrix cls1, NumericMatrix cls2, NumericVector K1s, NumericVector K2s, double a);
+RcppExport SEXP _WASABI_ext_Binder_Rcpp(SEXP cls1SEXP, SEXP cls2SEXP, SEXP K1sSEXP, SEXP K2sSEXP, SEXP aSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,13 +35,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type cls2(cls2SEXP);
     Rcpp::traits::input_parameter< NumericVector >::type K1s(K1sSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type K2s(K2sSEXP);
-    rcpp_result_gen = Rcpp::wrap(Binder_Rcpp(cls1, cls2, K1s, K2s));
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    rcpp_result_gen = Rcpp::wrap(Binder_Rcpp(cls1, cls2, K1s, K2s, a));
     return rcpp_result_gen;
 END_RCPP
 }
 // VI_compute_Rcpp
-double VI_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2);
-RcppExport SEXP _WASABI_ext_VI_compute_Rcpp(SEXP c1SEXP, SEXP c2SEXP, SEXP K1SEXP, SEXP K2SEXP) {
+double VI_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2, double a);
+RcppExport SEXP _WASABI_ext_VI_compute_Rcpp(SEXP c1SEXP, SEXP c2SEXP, SEXP K1SEXP, SEXP K2SEXP, SEXP aSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,13 +50,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type c2(c2SEXP);
     Rcpp::traits::input_parameter< int >::type K1(K1SEXP);
     Rcpp::traits::input_parameter< int >::type K2(K2SEXP);
-    rcpp_result_gen = Rcpp::wrap(VI_compute_Rcpp(c1, c2, K1, K2));
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    rcpp_result_gen = Rcpp::wrap(VI_compute_Rcpp(c1, c2, K1, K2, a));
     return rcpp_result_gen;
 END_RCPP
 }
 // VI_Rcpp
-NumericMatrix VI_Rcpp(NumericMatrix cls1, NumericMatrix cls2, NumericVector K1s, NumericVector K2s);
-RcppExport SEXP _WASABI_ext_VI_Rcpp(SEXP cls1SEXP, SEXP cls2SEXP, SEXP K1sSEXP, SEXP K2sSEXP) {
+NumericMatrix VI_Rcpp(NumericMatrix cls1, NumericMatrix cls2, NumericVector K1s, NumericVector K2s, double a);
+RcppExport SEXP _WASABI_ext_VI_Rcpp(SEXP cls1SEXP, SEXP cls2SEXP, SEXP K1sSEXP, SEXP K2sSEXP, SEXP aSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -62,7 +65,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type cls2(cls2SEXP);
     Rcpp::traits::input_parameter< NumericVector >::type K1s(K1sSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type K2s(K2sSEXP);
-    rcpp_result_gen = Rcpp::wrap(VI_Rcpp(cls1, cls2, K1s, K2s));
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    rcpp_result_gen = Rcpp::wrap(VI_Rcpp(cls1, cls2, K1s, K2s, a));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -107,10 +111,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_WASABI_ext_Binder_compute_Rcpp", (DL_FUNC) &_WASABI_ext_Binder_compute_Rcpp, 4},
-    {"_WASABI_ext_Binder_Rcpp", (DL_FUNC) &_WASABI_ext_Binder_Rcpp, 4},
-    {"_WASABI_ext_VI_compute_Rcpp", (DL_FUNC) &_WASABI_ext_VI_compute_Rcpp, 4},
-    {"_WASABI_ext_VI_Rcpp", (DL_FUNC) &_WASABI_ext_VI_Rcpp, 4},
+    {"_WASABI_ext_Binder_compute_Rcpp", (DL_FUNC) &_WASABI_ext_Binder_compute_Rcpp, 5},
+    {"_WASABI_ext_Binder_Rcpp", (DL_FUNC) &_WASABI_ext_Binder_Rcpp, 5},
+    {"_WASABI_ext_VI_compute_Rcpp", (DL_FUNC) &_WASABI_ext_VI_compute_Rcpp, 5},
+    {"_WASABI_ext_VI_Rcpp", (DL_FUNC) &_WASABI_ext_VI_Rcpp, 5},
     {"_WASABI_ext_comb2", (DL_FUNC) &_WASABI_ext_comb2, 1},
     {"_WASABI_ext_omARI_compute_Rcpp", (DL_FUNC) &_WASABI_ext_omARI_compute_Rcpp, 4},
     {"_WASABI_ext_omARI_Rcpp", (DL_FUNC) &_WASABI_ext_omARI_Rcpp, 4},

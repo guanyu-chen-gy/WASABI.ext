@@ -4,7 +4,7 @@
 \alias{vi.contribution}
 \title{VI contribution between two partitions}
 \usage{
-vi.contribution(Z1, Z2)
+vi.contribution(Z1, Z2, a = 1)
 }
 \arguments{
 \item{Z1}{Integer or factor vector: length-n cluster labels for partition 1.}

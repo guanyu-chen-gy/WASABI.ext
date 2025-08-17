@@ -4,7 +4,14 @@
 \alias{WD}
 \title{Computes the Wassertein distance between the empirical posterior and the WASABI distribution}
 \usage{
-WD(cls.draw, part, part.weights, assign.vi)
+WD(
+  cls.draw,
+  part,
+  part.weights,
+  assign.vi,
+  loss = c("VI", "Binder", "omARI"),
+  a = 1
+)
 }
 \arguments{
 \item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points.}

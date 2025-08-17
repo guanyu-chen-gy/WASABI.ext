@@ -4,7 +4,7 @@
 \alias{evi.contribution}
 \title{Expected VI Contribution}
 \usage{
-evi.contribution(Zmat, Zhat)
+evi.contribution(Zmat, Zhat, a = 1)
 }
 \arguments{
 \item{Zmat}{Integer matrix: S rows (samples) by n columns (data points), each row a clustering.}

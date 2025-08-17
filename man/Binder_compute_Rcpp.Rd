@@ -4,7 +4,7 @@
 \alias{Binder_compute_Rcpp}
 \title{Compute "n-invariant version” of Binder distance between two partitions}
 \usage{
-Binder_compute_Rcpp(c1, c2, K1, K2)
+Binder_compute_Rcpp(c1, c2, K1, K2, a = 1)
 }
 \arguments{
 \item{c1}{An integer vector of cluster labels for $n$ items. Should be 0-indexed.}

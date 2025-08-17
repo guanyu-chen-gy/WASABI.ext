@@ -1,0 +1,90 @@
+---
+title: "Function Test"
+author: "Guanyu"
+date: "2025-08-01"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE}
+devtools::load_all()
+library(WASABI.ext)
+library(BNPmix)
+library(mcclust)
+library(salso)
+library(superheat)
+library(ggplot2)
+```
+## Test Generalized VI.Rcpp function.
+
+1. Check the accuracy of the function.
+
+```{r }
+cls1 <- matrix(sample(0:3,25,replace = TRUE), nrow = 1)
+cls2 <- matrix(sample(0:6,25,replace = TRUE), nrow = 1)
+salso_loss <- salso::VI(cls1,cls2, a = 0.5)
+print(salso_loss)
+rcpp_loss <- VI_compute_Rcpp(cls1,cls2, 4, 7, a = 0.5)
+print(rcpp_loss)
+```
+
+2. Compare the speed.
+
+```{r }
+library(microbenchmark)
+microbenchmark(
+  salso = salso::VI(cls1,cls2),
+  cpp = VI_compute_Rcpp(cls1,cls2, 4, 7),
+  times = 100L
+)
+```
+## Test Generalized Binder.Rcpp function.
+
+1. Check the accuracy of the function.
+
+```{r }
+cls1 <- matrix(sample(0:3,25,replace = TRUE), nrow = 1)
+cls2 <- matrix(sample(0:6,25,replace = TRUE), nrow = 1)
+salso_loss <- salso::binder(cls1,cls2, a = 0.5)
+print(salso_loss)
+rcpp_loss <- Binder_compute_Rcpp(cls1,cls2, 4, 7, a = 0.5)
+print(rcpp_loss)
+```
+
+2. Compare the speed.
+
+```{r }
+library(microbenchmark)
+microbenchmark(
+  salso = salso::binder(cls1,cls2, a = 0.5),
+  cpp = Binder_compute_Rcpp(cls1,cls2, 4, 7, a = 0.5),
+  times = 100L
+)
+```
+
+## Testing omARI.rcpp
+
+1. Check the accuracy of the function.
+
+```{r }
+cls1 <- matrix(sample(0:3,25,replace = TRUE), nrow = 1)
+cls2 <- matrix(sample(0:6,25,replace = TRUE), nrow = 1)
+salso_loss <- salso::omARI(cls1,cls2)
+print(salso_loss)
+rcpp_loss <- omARI_compute_Rcpp(cls1,cls2, 4, 7)
+print(rcpp_loss)
+```
+
+2. Compare the speed.
+
+```{r }
+library(microbenchmark)
+microbenchmark(
+  salso = salso::omARI(cls1,cls2),
+  cpp = omARI_compute_Rcpp(cls1,cls2, 4, 7),
+  times = 100L
+)
+```
