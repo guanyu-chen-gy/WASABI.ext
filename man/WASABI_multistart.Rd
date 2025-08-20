@@ -23,6 +23,8 @@ WASABI_multistart(cls.draw = NULL, psm = NULL, multi.start = 10, ncores = 1,
 
 \item{multi.start}{Integer, the number of times to run the WASABI algorithm with different starting points.}
 
+\item{L}{Integer, the number of particles to be used in the WASABI approximation.}
+
 \item{ncores}{Integer, the number of cores to use for parallel processing, relies on parallel::mclapply, so can only be used on MacOs and Linux systems. If 1, no parallel processing is used.}
 
 \item{method.init}{Initialization method. Options are "average", "complete", "fixed", "++", "random_partition", "+++", and "topvi".}
@@ -38,8 +40,6 @@ WASABI_multistart(cls.draw = NULL, psm = NULL, multi.start = 10, ncores = 1,
 \item{method}{The method used to find the partition with minimum EVI (minVI partition). Options are "average", "complete", "greedy", and "salso".}
 
 \item{max.k}{Integer, the maximum number of clusters considered in the WASABI approximation (for "average", "complete", "greedy"). If NULL, it is set to the minimum of \code{max(Ks.draw)+10} and \code{ceiling(sqrt(n))}.}
-
-\item{L}{Integer, the number of particles to be used in the WASABI approximation.}
 
 \item{max.iter}{Integer, the maximum number of iterations for the WASABI algorithm.}
 

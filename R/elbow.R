@@ -112,11 +112,11 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
   wass_vec <- numeric(L_max)
   if (loss == "VI"){
     for (ell in 1:L_max) {
-      output_wvi <- WASABI_multistart(cls.draw, psm,
+      output_wvi <- WASABI_multistart(cls.draw, L = ell, psm = psm,
                                           multi.start = multi.start, ncores = ncores,
                                           method.init = method.init, add_topvi = add_topvi,
                                           lb = lb, thin.init = thin.init, part.init = part.init,
-                                          method = method, max.k = max.k, L = ell,
+                                          method = method, max.k = max.k,
                                           max.iter = max.iter, eps = eps,
                                           mini.batch = mini.batch, extra.iter = extra.iter,
                                           swap_countone = swap_countone,
@@ -129,11 +129,11 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
     }
   } else if (loss == "Binder"){
     for (ell in 1:L_max) {
-      output_wvi <- WASABI_multistart(cls.draw, psm,
+      output_wvi <- WASABI_multistart(cls.draw, L = ell, psm = psm,
                                           multi.start = multi.start, ncores = ncores,
                                           method.init = method.init, add_topvi = add_topvi,
                                           lb = FALSE, thin.init = thin.init, part.init = part.init,
-                                          method = method, max.k = max.k, L = ell,
+                                          method = method, max.k = max.k,
                                           max.iter = max.iter, eps = eps,
                                           mini.batch = mini.batch, extra.iter = extra.iter,
                                           swap_countone = swap_countone,
@@ -146,11 +146,11 @@ elbow <- function(cls.draw, L_max = 10, psm = NULL,
     }
   } else if (loss == "omARI"){
     for (ell in 1:L_max) {
-      output_wvi <- WASABI_multistart(cls.draw, psm,
+      output_wvi <- WASABI_multistart(cls.draw, L = ell, psm = psm,
                                           multi.start = multi.start, ncores = ncores,
                                           method.init = method.init, add_topvi = add_topvi,
                                           lb = FALSE, thin.init = thin.init, part.init = part.init,
-                                          method = method, max.k = max.k, L = ell,
+                                          method = method, max.k = max.k,
                                           max.iter = max.iter, eps = eps,
                                           mini.batch = mini.batch, extra.iter = extra.iter,
                                           swap_countone = swap_countone,

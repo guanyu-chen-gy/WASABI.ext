@@ -116,12 +116,12 @@
 #'                                 ncores = 3, multi.start = 20,
 #'                                 method.init = "topvi", method = "salso", loss = "VI")
 #' }
-WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, ncores = 1,
-                                  method.init = c("average", "complete", "fixed", "++", "random_partition", "+++", "topvi"),
+WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, L = 4, ncores = 1,
+                                  method.init = c("++", "average", "complete", "fixed", "+++", "topvi"),
                                   add_topvi = TRUE,
                                   lb = FALSE, thin.init = NULL, part.init = NULL,
-                                  method = c("average", "complete", "greedy", "salso"),
-                                  max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
+                                  method = c("salso", "average", "complete", "greedy"),
+                                  max.k = NULL, max.iter = 30, eps = 0.0001, mini.batch = 0,
                                   extra.iter = NULL,
                                   swap_countone = FALSE,
                                   suppress.comment = TRUE,
@@ -156,11 +156,11 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
 
   if (loss == "VI"){
     if (L == 1) {
-      out <- WASABI(cls.draw, psm,
+      out <- WASABI(cls.draw, L,  psm,
                         method.init, lb,
                         thin.init, part.init,
                         method, max.k,
-                        L, max.iter, eps,
+                        max.iter, eps,
                         mini.batch, extra.iter,
                         swap_countone,
                         suppress.comment,
@@ -179,11 +179,11 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     }
     out_par <- parallel::mclapply(1:multi.start,
                                   function(g) {
-                                    WASABI(cls.draw, psm,
+                                    WASABI(cls.draw, L, psm,
                                                method.init_vec[g], lb,
                                                thin.init, part.init,
                                                method, max.k,
-                                               L, max.iter, eps,
+                                               max.iter, eps,
                                                mini.batch, extra.iter,
                                                swap_countone,
                                                suppress.comment,
@@ -201,11 +201,11 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     return(out_par[[i_opt]])
   } else if (loss == "Binder"){
     if (L == 1) {
-      out <- WASABI(cls.draw, psm,
+      out <- WASABI(cls.draw, L, psm,
                         method.init, lb,
                         thin.init, part.init,
                         method, max.k,
-                        L, max.iter, eps,
+                        max.iter, eps,
                         mini.batch, extra.iter,
                         swap_countone,
                         suppress.comment,
@@ -224,11 +224,11 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     }
     out_par <- parallel::mclapply(1:multi.start,
                                   function(g) {
-                                    WASABI(cls.draw, psm,
+                                    WASABI(cls.draw, L, psm,
                                                method.init_vec[g], lb,
                                                thin.init, part.init,
                                                method, max.k,
-                                               L, max.iter, eps,
+                                               max.iter, eps,
                                                mini.batch, extra.iter,
                                                swap_countone,
                                                suppress.comment,
@@ -246,11 +246,11 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     return(out_par[[i_opt]])
   } else if (loss == "omARI") {
     if (L == 1) {
-      out <- WASABI(cls.draw, psm,
+      out <- WASABI(cls.draw, L, psm,
                         method.init, lb,
                         thin.init, part.init,
                         method, max.k,
-                        L, max.iter, eps,
+                        max.iter, eps,
                         mini.batch, extra.iter,
                         swap_countone,
                         suppress.comment,
@@ -269,11 +269,11 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, nco
     }
     out_par <- parallel::mclapply(1:multi.start,
                                   function(g) {
-                                    WASABI(cls.draw, psm,
+                                    WASABI(cls.draw, L, psm,
                                                method.init_vec[g], lb,
                                                thin.init, part.init,
                                                method, max.k,
-                                               L, max.iter, eps,
+                                               max.iter, eps,
                                                mini.batch, extra.iter,
                                                swap_countone,
                                                suppress.comment,

@@ -90,11 +90,11 @@
 #' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso", loss = "VI"
 #'                      mini.batch = 200, max.iter = 20, extra.iter = 10)
 #' }
-WASABI <- function(cls.draw = NULL, psm = NULL,
-                       method.init = c("average", "complete", "fixed", "++", "random_partition", "+++", "topvi"),
+WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
+                   method.init = c("++", "average", "complete", "fixed",  "+++", "topvi"),
                        lb = FALSE, thin.init = NULL, part.init = NULL,
-                       method = c("average", "complete", "greedy", "salso"),
-                       max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
+                       method = c("salso", "average", "complete", "greedy"),
+                       max.k = NULL, max.iter = 10, eps = 0.0001, mini.batch = 200,
                        extra.iter = NULL,
                        swap_countone = FALSE,
                        suppress.comment = TRUE,

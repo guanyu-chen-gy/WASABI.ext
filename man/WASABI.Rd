@@ -16,6 +16,8 @@ WASABI(cls.draw = NULL, psm = NULL,
 \arguments{
 \item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points.}
 
+\item{L}{Integer, the number of particles to be used in the WASABI approximation.}
+
 \item{psm}{The posterior similarity matrix obtained from MCMC samples of partitions stored in \code{cls.draw}.}
 
 \item{method.init}{Initialization method. Options are "average", "complete", "fixed", "++", "random_partition", "+++", and "topvi".}
@@ -29,8 +31,6 @@ WASABI(cls.draw = NULL, psm = NULL,
 \item{method}{The method used to find the partition with minimum EVI or EBinder (minVI partition/ minBinder partition). Options are "average", "complete", "greedy", and "salso".}
 
 \item{max.k}{Integer, the maximum number of clusters considered in the WASABI approximation (for "average", "complete", "greedy"). If NULL, it is set to the minimum of \code{max(Ks.draw)+10} and \code{ceiling(sqrt(n))}.}
-
-\item{L}{Integer, the number of particles to be used in the WASABI approximation.}
 
 \item{max.iter}{Integer, the maximum number of iterations for the WASABI algorithm.}
 
