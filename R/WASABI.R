@@ -879,12 +879,12 @@ WASABI <- function(cls.draw = NULL, L = 4, psm = NULL,
       )
     } else if (loss == "Binder"){
       output <- list(
-        particles = part, EB = part.evi, wass.dist = NA,
+        particles = part, EVI = part.evi, wass.dist = NA,
         part.psm = NA, part.weights = NA, draws.assign = NA
       )
     } else if (loss == "omARI"){
       output <- list(
-        particles = part, EomARI = part.evi, wass.dist = NA,
+        particles = part, EVI = part.evi, wass.dist = NA,
         part.psm = NA, part.weights = NA, draws.assign = NA
       )
     }
@@ -1072,7 +1072,7 @@ WASABI <- function(cls.draw = NULL, L = 4, psm = NULL,
     }
 
     output <- list(
-      particles = part_ordered, EB = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
+      particles = part_ordered, EVI = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
       part.psm = psm_K_ordered, part.weights = counts_ordered / dim(cls.draw)[1], draws.assign = assign.vi_ordered
     )
   } else if (loss == "omARI"){
@@ -1157,7 +1157,7 @@ WASABI <- function(cls.draw = NULL, L = 4, psm = NULL,
     }
 
     output <- list(
-      particles = part_ordered, EomARI = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
+      particles = part_ordered, EVI = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
       part.psm = psm_K_ordered, part.weights = counts_ordered / dim(cls.draw)[1], draws.assign = assign.vi_ordered
     )
   }
