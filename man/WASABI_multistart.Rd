@@ -14,7 +14,7 @@ WASABI_multistart(cls.draw = NULL, psm = NULL, multi.start = 10, ncores = 1,
                   extra.iter = NULL,
                   swap_countone = FALSE,
                   suppress.comment = TRUE,
-                  return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI"),...)
+                  return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI"), a = 1, ...)
 }
 \arguments{
 \item{cls.draw}{A matrix of the MCMC samples of partitions of $n$ data points.}

@@ -18,7 +18,7 @@
 #'                   extra.iter = NULL,
 #'                   swap_countone = FALSE,
 #'                   suppress.comment = TRUE,
-#'                   return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI"),...)
+#'                   return_psm = FALSE, seed = NULL, loss = c("VI","Binder","omARI"), a = 1, ...)
 #'
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
@@ -154,143 +154,56 @@ WASABI_multistart <- function(cls.draw = NULL, psm = NULL, multi.start = 10, L =
   }
   return_psm <- FALSE # default to FALSE to avoid long computation times for large datasets
 
-  if (loss == "VI"){
-    if (L == 1) {
-      out <- WASABI(cls.draw, L,  psm,
-                        method.init, lb,
-                        thin.init, part.init,
-                        method, max.k,
-                        max.iter, eps,
-                        mini.batch, extra.iter,
-                        swap_countone,
-                        suppress.comment,
-                        return_psm,
-                        seed = NULL,
-                        loss = "VI", a = a , ...
-      )
-      return(out)
-    }
-
-    if (add_topvi & method.init != "topvi") {
-      multi.start <- 1 + multi.start
-      method.init_vec <- c("topvi", rep(method.init, length = multi.start))
-    } else {
-      method.init_vec <- rep(method.init, length = multi.start)
-    }
-    out_par <- parallel::mclapply(1:multi.start,
-                                  function(g) {
-                                    WASABI(cls.draw, L, psm,
-                                               method.init_vec[g], lb,
-                                               thin.init, part.init,
-                                               method, max.k,
-                                               max.iter, eps,
-                                               mini.batch, extra.iter,
-                                               swap_countone,
-                                               suppress.comment,
-                                               return_psm,
-                                               seed = seeds[g],
-                                               loss = "VI", a = a, ...
-                                    )
-                                  },
-                                  mc.cores = ncores
-    )
-    i_opt <- which.min(lapply(out_par, function(x) x$wass.dist))
-    if(exists("default_rng")) {
-      do.call(RNGkind, as.list(default_rng))
-    }
-    return(out_par[[i_opt]])
-  } else if (loss == "Binder"){
-    if (L == 1) {
-      out <- WASABI(cls.draw, L, psm,
-                        method.init, lb,
-                        thin.init, part.init,
-                        method, max.k,
-                        max.iter, eps,
-                        mini.batch, extra.iter,
-                        swap_countone,
-                        suppress.comment,
-                        return_psm,
-                        seed = NULL,
-                        loss = "Binder", a = a, ...
-      )
-      return(out)
-    }
-
-    if (add_topvi & method.init != "topvi") {
-      multi.start <- 1 + multi.start
-      method.init_vec <- c("topvi", rep(method.init, length = multi.start))
-    } else {
-      method.init_vec <- rep(method.init, length = multi.start)
-    }
-    out_par <- parallel::mclapply(1:multi.start,
-                                  function(g) {
-                                    WASABI(cls.draw, L, psm,
-                                               method.init_vec[g], lb,
-                                               thin.init, part.init,
-                                               method, max.k,
-                                               max.iter, eps,
-                                               mini.batch, extra.iter,
-                                               swap_countone,
-                                               suppress.comment,
-                                               return_psm,
-                                               seed = seeds[g],
-                                               loss = "Binder", a = a ,...
-                                    )
-                                  },
-                                  mc.cores = ncores
-    )
-    i_opt <- which.min(lapply(out_par, function(x) x$wass.dist))
-    if(exists("default_rng")) {
-      do.call(RNGkind, as.list(default_rng))
-    }
-    return(out_par[[i_opt]])
-  } else if (loss == "omARI") {
-    if (L == 1) {
-      out <- WASABI(cls.draw, L, psm,
-                        method.init, lb,
-                        thin.init, part.init,
-                        method, max.k,
-                        max.iter, eps,
-                        mini.batch, extra.iter,
-                        swap_countone,
-                        suppress.comment,
-                        return_psm,
-                        seed = NULL,
-                        loss = "omARI", a = a,...
-      )
-      return(out)
-    }
-
-    if (add_topvi & method.init != "topvi") {
-      multi.start <- 1 + multi.start
-      method.init_vec <- c("topvi", rep(method.init, length = multi.start))
-    } else {
-      method.init_vec <- rep(method.init, length = multi.start)
-    }
-    out_par <- parallel::mclapply(1:multi.start,
-                                  function(g) {
-                                    WASABI(cls.draw, L, psm,
-                                               method.init_vec[g], lb,
-                                               thin.init, part.init,
-                                               method, max.k,
-                                               max.iter, eps,
-                                               mini.batch, extra.iter,
-                                               swap_countone,
-                                               suppress.comment,
-                                               return_psm,
-                                               seed = seeds[g],
-                                               loss = "omARI", a = a, ...
-                                    )
-                                  },
-                                  mc.cores = ncores
-    )
-    i_opt <- which.min(lapply(out_par, function(x) x$wass.dist))
-    if(exists("default_rng")) {
-      do.call(RNGkind, as.list(default_rng))
-    }
-    return(out_par[[i_opt]])
-  }
-  else {
+  if (loss != "VI" & loss != "Binder" & loss != "omARI"){
     stop("Invalid loss function specified. Choose from 'VI', 'Binder', or 'omARI'.")
   }
+
+  if (L == 1) {
+    out <- WASABI(cls.draw, L, psm,
+                  method.init, lb,
+                  thin.init, part.init,
+                  method, max.k,
+                  max.iter, eps,
+                  mini.batch, extra.iter,
+                  swap_countone,
+                  suppress.comment,
+                  return_psm,
+                  seed = NULL,
+                  loss = loss,
+                  a = a,
+                  ...
+    )
+    return(out)
+  }
+
+  if (add_topvi & method.init != "topvi") {
+    multi.start <- 1 + multi.start
+    method.init_vec <- c("topvi", rep(method.init, length = multi.start))
+  } else {
+    method.init_vec <- rep(method.init, length = multi.start)
+  }
+  out_par <- parallel::mclapply(1:multi.start,
+                                function(g) {
+                                  WASABI(cls.draw, L, psm,
+                                         method.init_vec[g], lb,
+                                         thin.init, part.init,
+                                         method, max.k,
+                                         max.iter, eps,
+                                         mini.batch, extra.iter,
+                                         swap_countone,
+                                         suppress.comment,
+                                         return_psm,
+                                         seed = seeds[g],
+                                         loss = loss,
+                                         a = a,
+                                         ...
+                                  )
+                                },
+                                mc.cores = ncores
+  )
+  i_opt <- which.min(lapply(out_par, function(x) x$wass.dist))
+  if(exists("default_rng")) {
+    do.call(RNGkind, as.list(default_rng))
+  }
+  return(out_par[[i_opt]])
 }
