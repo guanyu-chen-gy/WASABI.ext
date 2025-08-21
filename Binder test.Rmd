@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r message = FALSE}
+```{r message = FALSE, echo = FALSE}
 devtools::load_all()
 library(WASABI.ext)
 library(BNPmix)
@@ -20,57 +20,6 @@ library(mcclust)
 library(salso)
 library(superheat)
 library(ggplot2)
-```
-
-```{r}
-set.seed(12345)
-mu <-  c(-1.1, 1.1)
-prop <- c(0.5, 0.5)
-n <- 600
-components <- sample(1:2, size = n, replace = TRUE, prob = prop)
-y <- rnorm(n, mean = mu[components], sd = 1)
-hist(y, breaks = 20)
-```
-
-```{r example}
-est_model <- BNPmix::PYdensity(y = y,
-                               mcmc = list(niter = 15000,
-                                           nburn = 5000,
-                                           model = "LS",
-                                           print_message = FALSE),
-                               output = list(out_type = "FULL",
-                                             out_param = TRUE))
-cls.draw = est_model$clust
-z_minb <- salso::salso(cls.draw, loss = binder(a = 1.3))
-table(z_minb)
-psm=mcclust::comp.psm(cls.draw+1)
-```
-
-```{r}
-out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,
-                     method.init = "topvi", method = "salso", 
-                     loss = "Binder", a = 1.3, maxNClusters = 10)
-
-out_WASABI_ms <- WASABI_multistart(cls.draw, psm = psm, L = 2,
-                                   multi.start = 20, ncores = 4,
-                                   mini.batch = 150,
-                                   max.iter = 10, extra.iter = 4,
-                                   method.init = "++", method = "salso",
-                                   a = 1.2,
-                                   loss = "Binder", maxNClusters = 10)
-
-if(out_WASABI_ms$wass.dist < out_WASABI$wass.dist){
-  out_WASABI <- out_WASABI_ms
-}
-ggsummary(out_WASABI)
-```
-
-```{r}
-ggrange_hist(out_WASABI, y)
-```
-
-```{r}
-ggscatter_grid(out_WASABI, y)
 ```
 
 # Two-dimensional data
@@ -94,9 +43,8 @@ Y[ind==4,1] = Y[ind==4,1] - m; Y[ind==4,2] = Y[ind==4,2] + m;
 cls.true = ind
 ```
 
-```{r}
-library(ggplot2)
-ggplot() +
+```{r, echo = FALSE}
+p0 <- ggplot() +
   geom_point(aes(x = Y[,1],
                  y = Y[,2],
                  colour = as.factor(cls.true),
@@ -104,7 +52,10 @@ ggplot() +
   theme_bw() + guides(colour=guide_legend(title="Cluster"),
                       shape = guide_legend(title="Cluster")) +
   xlab(expression("x"[1])) + ylab(expression("x"[2]))
+p0
 ```
+
+Run MCMC
 
 ```{r}
 set.seed(4321)
@@ -138,202 +89,346 @@ cls.draw = est_model$clust
 psm=mcclust::comp.psm(cls.draw+1)
 ```
 
-## The following shows how WASABI works for different value of `a'.
+# Parameter selction
 
-### a = 1.1
-```{r}
-z_minb <- salso::salso(cls.draw, loss = binder(a = 1.1), maxNClusters = 10)
-table(z_minb)
+Inspired by salso paper's experiment, we can roughly devide the range of a with respect to number of clusters.
+
+For  $a\in[1.065,1.125)$ there are 6 clusters produced.
+
+```{r} 
+z_minb1 <- salso::salso(cls.draw, loss = binder(a = 1.065))
+table(z_minb1)
 ```
 
-```{r}
+```{r, echo = FALSE}
 df = data.frame(x1 = Y[,1],
                 x2 = Y[,2],
-                Cluster = z_minb)
+                Cluster = z_minb1)
 df$Cluster = as.factor(df$Cluster)
 
-ggplot(df)+
+p1 <- ggplot(df)+
   geom_point(aes(x = x1, y = x2, color = Cluster, shape = Cluster)) +
   ylab(expression("x"[2]))+xlab(expression("x"[1]))+
-  theme_bw()
+  theme_bw() + ggtitle("salso estimate for a = 1.065")
 ```
 
-```{r}
-set.seed(123)
-out_elbow <- elbow(cls.draw, L_max = 5, psm = psm,
-                   multi.start = 1,
-                   method.init = "++", method = "salso",
-                   loss = "Binder", a = 1.1, maxNClusters = 10)
+For  $a\in[1.125,1.168)$ there are 5 clusters produced.
 
-plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles")
+```{r}
+z_minb2 <- salso::salso(cls.draw, loss = binder(a = 1.13), maxNClusters = 10)
+table(z_minb2)
 ```
 
-We choose "L=3" as the optimal number of clusters.
-
-```{r}
-L = 3
-output_WASABI <- out_elbow$output_list[[L]]
-# output_WASABI_mb = WASABI_multistart(cls.draw, psm,
-#                                     multi.start = 25, ncores = 4,
-#                                     method.init ="++", add_topvi = FALSE,
-#                                     method="salso", L=L,
-#                                     mini.batch = 500,
-#                                     max.iter= 10, extra.iter = 5,
-#                                     suppress.comment=TRUE,
-#                                     swap_countone = TRUE,
-#                                     seed = 54321, loss = "Binder",
-#                                     a = 1.1,
-#                                     maxNClusters = 10)
-# 
-# if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
-#   output_WASABI <- output_WASABI_mb
-# }
-
-ggsummary(output_WASABI)
-```
-
-```{r}
-ggscatter_grid2d(output_WASABI, Y)
-```
-
-### a = 1.2
-```{r}
-z_minb <- salso::salso(cls.draw, loss = binder(a = 1.2), maxNClusters = 10)
-table(z_minb)
-```
-
-```{r}
+```{r, echo = FALSE}
 df = data.frame(x1 = Y[,1],
                 x2 = Y[,2],
-                Cluster = z_minb)
+                Cluster = z_minb2)
 df$Cluster = as.factor(df$Cluster)
 
-ggplot(df)+
+p2 <- ggplot(df)+
   geom_point(aes(x = x1, y = x2, color = Cluster, shape = Cluster)) +
   ylab(expression("x"[2]))+xlab(expression("x"[1]))+
-  theme_bw()
+  theme_bw() + ggtitle("salso estimate for a = 1.13")
+```
+
+For  $a\in[1.168,1.213)$ there are 4 clusters produced.
+
+```{r}
+z_minb3 <- salso::salso(cls.draw, loss = binder(a = 1.17), maxNClusters = 10)
+table(z_minb3)
+```
+
+```{r, echo = FALSE}
+df = data.frame(x1 = Y[,1],
+                x2 = Y[,2],
+                Cluster = z_minb3)
+df$Cluster = as.factor(df$Cluster)
+
+p3 <- ggplot(df)+
+  geom_point(aes(x = x1, y = x2, color = Cluster, shape = Cluster)) +
+  ylab(expression("x"[2]))+xlab(expression("x"[1]))+
+  theme_bw() + ggtitle("a = 1.17")
+```
+
+For  $a\in[1.213,1.47)$ there are 3 clusters produced.
+
+```{r}
+z_minb4 <- salso::salso(cls.draw, loss = binder(a = 1.3), maxNClusters = 10)
+table(z_minb4)
+```
+
+```{r, echo = FALSE}
+df = data.frame(x1 = Y[,1],
+                x2 = Y[,2],
+                Cluster = z_minb4)
+df$Cluster = as.factor(df$Cluster)
+
+p4 <- ggplot(df)+
+  geom_point(aes(x = x1, y = x2, color = Cluster, shape = Cluster)) +
+  ylab(expression("x"[2]))+xlab(expression("x"[1]))+
+  theme_bw() + ggtitle("a = 1.3")
+```
+
+For  $a\in[1.47,1.665)$ there are 2 clusters produced. And for $a$ between 1.665 and 2, only one cluster is produced.
+
+```{r}
+z_minb5 <- salso::salso(cls.draw, loss = binder(a = 1.5), maxNClusters = 10)
+table(z_minb5)
+```
+
+```{r, echo = FALSE}
+df = data.frame(x1 = Y[,1],
+                x2 = Y[,2],
+                Cluster = z_minb5)
+df$Cluster = as.factor(df$Cluster)
+
+p5 <- ggplot(df)+
+  geom_point(aes(x = x1, y = x2, color = Cluster, shape = Cluster)) +
+  ylab(expression("x"[2]))+xlab(expression("x"[1]))+
+  theme_bw() + ggtitle("a = 1.5")
+```
+
+We can put all the plots together to see how the number of clusters change.
+
+```{r, echo = FALSE}
+p1
+p2
+p3
+p4
+p5
+```
+
+# The following shows how WASABI works for different value of `a'.
+
+# a = 1.065
+```{r}
+table(z_minb1)
+```
+
+```{r,echo= FALSE}
+p1
 ```
 
 ```{r}
 set.seed(123)
-out_elbow <- elbow(cls.draw, L_max = 5, psm = psm,
-                   multi.start = 1,
-                   method.init = "++", method = "salso",
-                   loss = "Binder", a = 1.2, maxNClusters = 10)
+out_elbow <- elbow(cls.draw, L_max = 6, psm = psm,
+                   multi.start = 6, method.init = "++",
+                   method = "salso", mini.batch = 500, ncores = 6,
+                   loss = "Binder", a = 1.065, maxNClusters = 10)
 
-plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles")
+plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles", main = " a = 1.065")
 ```
 
-We choose "L=3" as the optimal number of clusters.
+We choose "L=4" as the optimal number of clusters.
 
 ```{r}
-L = 3
+L = 4
 output_WASABI <- out_elbow$output_list[[L]]
-# output_WASABI_mb = WASABI_multistart(cls.draw, psm,
-#                                     multi.start = 25, ncores = 4,
-#                                     method.init ="++", add_topvi = FALSE,
-#                                     method="salso", L=L,
-#                                     mini.batch = 500,
-#                                     max.iter= 10, extra.iter = 5,
-#                                     suppress.comment=TRUE,
-#                                     swap_countone = TRUE,
-#                                     seed = 54321, loss = "Binder",
-#                                     a = 1.8,
-#                                     maxNClusters = 10)
-# 
-# if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
-#   output_WASABI <- output_WASABI_mb
-# }
+output_WASABI_mb = WASABI_multistart(cls.draw, psm,
+                                    multi.start = 25, ncores = 6,
+                                    method.init ="++", add_topvi = FALSE,
+                                    method="salso", L=L,
+                                    mini.batch = 500,
+                                    max.iter= 10, extra.iter = 5,
+                                    suppress.comment=TRUE,
+                                    swap_countone = TRUE,
+                                    seed = 54321, loss = "Binder",
+                                    a = 1.065,
+                                    maxNClusters = 10)
 
-ggsummary(output_WASABI)
+if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
+  output_WASABI <- output_WASABI_mb
+}
+
+ggsummary(output_WASABI, title = " a = 1.065 ")
 ```
 
 ```{r}
-ggscatter_grid2d(output_WASABI, Y)
+ggscatter_grid2d(output_WASABI, Y, title = " a = 1.065 ")
 ```
 
-### a = 1.3
-
+# a = 1.13
 ```{r}
-z_minb <- salso::salso(cls.draw, loss = binder(a = 1.3))
-table(z_minb)
+table(z_minb2)
+```
+
+```{r, echo = FALSE}
+p2
 ```
 
 ```{r}
 set.seed(123)
-out_elbow <- elbow(cls.draw, L_max = 5, psm = psm,
-                   multi.start = 1,
-                   method.init = "topvi", method = "salso",
+out_elbow <- elbow(cls.draw, L_max = 6, psm = psm,
+                   multi.start = 6, method.init = "++",
+                   method = "salso", mini.batch = 500, ncores = 6,
+                   loss = "Binder", a = 1.13, maxNClusters = 10)
+
+plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles", main = " a = 1.13")
+```
+
+We choose "L=4" as the optimal number of clusters.
+
+```{r}
+L = 4
+output_WASABI <- out_elbow$output_list[[L]]
+output_WASABI_mb = WASABI_multistart(cls.draw, psm,
+                                    multi.start = 25, ncores = 6,
+                                    method.init ="++", add_topvi = FALSE,
+                                    method="salso", L=L,
+                                    mini.batch = 500,
+                                    max.iter= 10, extra.iter = 5,
+                                    suppress.comment=TRUE,
+                                    swap_countone = TRUE,
+                                    seed = 54321, loss = "Binder",
+                                    a = 1.13,
+                                    maxNClusters = 10)
+
+if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
+  output_WASABI <- output_WASABI_mb
+}
+
+ggsummary(output_WASABI, title = " a = 1.13 ")
+```
+
+```{r}
+ggscatter_grid2d(output_WASABI, Y, title = " a = 1.13 ")
+```
+
+# a = 1.17
+
+```{r}
+table(z_minb3)
+```
+
+```{r, echo = FALSE}
+p3
+```
+
+```{r}
+set.seed(123)
+out_elbow <- elbow(cls.draw, L_max = 6, psm = psm,
+                   multi.start = 6, method.init = "++",
+                   method = "salso", mini.batch = 500, ncores = 6,
+                   loss = "Binder", a = 1.17, maxNClusters = 10)
+plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles", main = " a = 1.17 ")
+```
+
+We choose "L=4" as the optimal number of clusters.
+
+```{r}
+L = 4
+output_WASABI <- out_elbow$output_list[[L]]
+output_WASABI_mb = WASABI_multistart(cls.draw, psm,
+                                    multi.start = 25, ncores = 6,
+                                    method.init ="++", add_topvi = FALSE,
+                                    method="salso", L=L,
+                                    mini.batch = 500,
+                                    max.iter= 10, extra.iter = 5,
+                                    suppress.comment=TRUE,
+                                    swap_countone = TRUE,
+                                    seed = 54321, loss = "Binder", a = 1.17,
+                                    maxNClusters = 10)
+
+if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
+  output_WASABI <- output_WASABI_mb
+}
+
+ggsummary(output_WASABI, title = "a=1.17")
+```
+
+```{r}
+ggscatter_grid2d(output_WASABI, Y, title = "a = 1.17 ")
+```
+
+# a = 1.3
+
+```{r}
+table(z_minb4)
+```
+
+```{r, echo=FALSE}
+p4
+```
+
+```{r}
+set.seed(123)
+out_elbow <- elbow(cls.draw, L_max = 6, psm = psm,
+                   multi.start = 6, method.init = "++",
+                   method = "salso", mini.batch = 500, ncores = 6,
                    loss = "Binder", a = 1.3, maxNClusters = 10)
-plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles")
+plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles", main = "a = 1.3")
 ```
 
-We choose "L=2" as the optimal number of clusters.
+We choose "L=4" as the optimal number of clusters.
 
 ```{r}
 L = 4
 output_WASABI <- out_elbow$output_list[[L]]
-# output_WASABI_mb = WASABI_multistart(cls.draw, psm,
-#                                     multi.start = 25, ncores = 4,
-#                                     method.init ="++", add_topvi = FALSE,
-#                                     method="salso", L=L,
-#                                     mini.batch = 500,
-#                                     max.iter= 10, extra.iter = 5,
-#                                     suppress.comment=TRUE,
-#                                     swap_countone = TRUE,
-#                                     seed = 54321, loss = "Binder", a = 1.3,
-#                                     maxNClusters = 10)
-# 
-# if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
-#   output_WASABI <- output_WASABI_mb
-# }
+output_WASABI_mb = WASABI_multistart(cls.draw, psm,
+                                    multi.start = 25, ncores = 6,
+                                    method.init ="++", add_topvi = FALSE,
+                                    method="salso", L=L,
+                                    mini.batch = 500,
+                                    max.iter= 10, extra.iter = 5,
+                                    suppress.comment=TRUE,
+                                    swap_countone = TRUE,
+                                    seed = 54321, loss = "Binder", a = 1.3,
+                                    maxNClusters = 10)
 
-ggsummary(output_WASABI)
+if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
+  output_WASABI <- output_WASABI_mb
+}
+
+ggsummary(output_WASABI, title = "a=1.3")
 ```
 
 ```{r}
-ggscatter_grid2d(output_WASABI, Y)
+ggscatter_grid2d(output_WASABI, Y, title = "a = 1.3")
 ```
 
-### a = 1.5
+
+# a = 1.5
 
 ```{r}
-z_minb <- salso::salso(cls.draw, loss = binder(a = 1.5))
-table(z_minb)
+table(z_minb5)
+```
+
+```{r,echo = FALSE}
+p5
 ```
 
 ```{r}
 set.seed(123)
-out_elbow <- elbow(cls.draw, L_max = 5, psm = psm,
-                   multi.start = 1,
-                   method.init = "topvi", method = "salso",
+out_elbow <- elbow(cls.draw, L_max = 6, psm = psm,
+                   multi.start = 6, method.init = "++",
+                   method = "salso", mini.batch = 500, ncores = 6,
                    loss = "Binder", a = 1.5, maxNClusters = 10)
-plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles")
+plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles", main = " a = 1.5 ")
 ```
 
-We choose "L=2" as the optimal number of clusters.
+We choose "L=3" as the optimal number of clusters.
 
 ```{r}
-L = 4
+L = 3
 output_WASABI <- out_elbow$output_list[[L]]
-# output_WASABI_mb = WASABI_multistart(cls.draw, psm,
-#                                     multi.start = 25, ncores = 4,
-#                                     method.init ="++", add_topvi = FALSE,
-#                                     method="salso", L=L,
-#                                     mini.batch = 500,
-#                                     max.iter= 10, extra.iter = 5,
-#                                     suppress.comment=TRUE,
-#                                     swap_countone = TRUE,
-#                                     seed = 54321, loss = "Binder", a = 1.2,
-#                                     maxNClusters = 10)
-# 
-# if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
-#   output_WASABI <- output_WASABI_mb
-# }
+output_WASABI_mb = WASABI_multistart(cls.draw, psm,
+                                    multi.start = 25, ncores = 6,
+                                    method.init ="++", add_topvi = FALSE,
+                                    method="salso", L=L,
+                                    mini.batch = 500,
+                                    max.iter= 10, extra.iter = 5,
+                                    suppress.comment=TRUE,
+                                    swap_countone = TRUE,
+                                    seed = 54321, loss = "Binder", a = 1.5,
+                                    maxNClusters = 10)
 
-ggsummary(output_WASABI)
+if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
+  output_WASABI <- output_WASABI_mb
+}
+
+ggsummary(output_WASABI, title = " a = 1.5 ")
 ```
 
 ```{r}
-ggscatter_grid2d(output_WASABI, Y)
+ggscatter_grid2d(output_WASABI, Y, title = " a = 1.5" )
 ```

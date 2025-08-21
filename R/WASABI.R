@@ -8,33 +8,36 @@
 #' As the algorithm is only guaranteed convergence to a local optimum, it is
 #' recommended to run it multiple times with different initializations.
 #'
-#' @usage WASABI(cls.draw = NULL, psm = NULL,
-#'        method.init = c("average", "complete", "fixed", "++",
-#'                        "random_partition", "+++", "topvi"),
+#' @usage WASABI(cls.draw = NULL, L = 4, psm = NULL,
+#'        method.init = c("++", "average", "complete", "fixed",
+#'                        "+++", "topvi"),
 #'        lb = FALSE, thin.init = NULL, part.init = NULL,
-#'        method = c("average", "complete", "greedy", "salso"),
-#'        max.k = NULL, L = 10, max.iter = 30, eps = 0.0001, mini.batch = 0,
+#'        method = c("salso", "average", "complete", "greedy"),
+#'        max.k = NULL, max.iter = 30, eps = 0.0001, mini.batch = 0,
 #'        extra.iter = NULL,swap_countone = FALSE,suppress.comment = TRUE,
-#'        return_psm = FALSE,seed = NULL, loss = c("VI","Binder","omARI"),a=1, ...)
+#'        return_psm = FALSE,seed = NULL,
+#'        loss = c("VI","Binder","omARI"), a = 1, ...)
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
+#' @param L Integer, the number of particles to be used in the WASABI approximation.
 #' @param psm The posterior similarity matrix obtained from MCMC samples of partitions stored in \code{cls.draw}.
-#' @param method.init Initialization method. Options are "average", "complete", "fixed", "++", "random_partition", "+++", and "topvi".
-#' @param lb Logical, if TRUE, the lower bound for loss function is used in methods "average" or "complete".
+#' @param method.init Initialization method. Options are "++", "average", "complete", "fixed", "+++", and "topvi". Default is "++".
+#' @param lb Logical, if TRUE, the lower bound for the VI is used in methods "average" or "complete".
 #' @param thin.init Integer, thinning factor for the MCMC samples used to initialize the particles. If NULL, defaults to 10.
 #' @param part.init A matrix of size \code{L} x \code{n}, containing the initial particles. Needs to be provided when \code{method.init = "fixed"}.
-#' @param method The method used to find the partition with minimum EVI or EBinder (minVI partition/ minBinder partition). Options are "average", "complete", "greedy", and "salso".
+#' @param method The method used to find the partition with minimum EVI (minVI partition). Options are "salso", "average", "complete", and "greedy". Default is "salso".
 #' @param max.k Integer, the maximum number of clusters considered in the WASABI approximation (for "average", "complete", "greedy"). If NULL, it is set to the minimum of \code{max(Ks.draw)+10} and \code{ceiling(sqrt(n))}.
-#' @param L Integer, the number of particles to be used in the WASABI approximation.
 #' @param max.iter Integer, the maximum number of iterations for the WASABI algorithm.
-#' @param eps Numeric, the convergence threshold for the WASABI algorithm. The algorithm stops when the difference in Wasserstein distance between two consecutive iterations is less than \code{eps}.
+#' @param eps Numeric, the relative convergence threshold for the WASABI algorithm. The algorithm stops when the difference in Wasserstein distance between two consecutive iterations is less than \code{eps * log2(n)}.
 #' @param mini.batch Integer, the size of the mini-batch used in the WASABI algorithm. If 0, the full batch is used.
-#' @param extra.iter Integer, the number of additional iterations to run after the mini-batch optimization. If NULL, defaults to 1 if \code{mini.batch > 0}. Has to be greater than 0.
+#' @param extra.iter Integer, the number of additional iterations to run after the mini-batch optimization. If NULL, defaults to 3 if \code{mini.batch > 0}. Has to be greater than 0.
 #' @param swap_countone Logical, if TRUE, the WASABI algorithm allows swapping of particles with only one sample assigned to them (outlier-check step).
 #' @param suppress.comment Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.
 #' @param return_psm Logical, if TRUE, returns the posterior similarity matrix for each particle.
 #' @param seed An optional integer to set the random seed for reproducibility. If NULL, no seed is set.
-#' @param loss Loss function. Options are "VI", "Binder", and "omARI". The loss function determines the optimization criterion for the WASABI algorithm.
+#' @param loss loss function used, options are "VI", "Binder" and "omARI".
+#' @param a parameter used in generalization of "VI" and "Binder", with range 0-2.
+#' @param ... Additional arguments passed to the salso algorithm.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -44,24 +47,22 @@
 #'   \item{part.psm}{A list of length \code{L}, each element containing the posterior similarity matrix corresponding to the region of attraction of each particle. Only returned if \code{return_psm} is TRUE.}
 #'   \item{part.weights}{A vector of length \code{L}, containing weight associated to each particle.}
 #'   \item{draws.assign}{A vector containing the assignment of each MCMC sample to its closest particle.}
-#'   \item{EB}{A vector of length \code{L}, containing expected Binder associated to each particle.}
 #' }
 #'
 #' @details Several initialization methods are available:
 #' \itemize{
+#'    \item \code{"++"} uses an algorithm similar to k-means++, i.e. promotes diversity among initial centers by iteratively choosing the next center with probability proportional to its VI distance from the closest already chosen center;
 #'    \item \code{"average"} and \code{"complete"} initialize the particles using hierarchical clustering (choosing the $L$ ones with smallest EVI);
 #'    \item \code{"fixed"} initializes the algorithm with a set of $L$ partition provided in \code{part.init};
-#'    \item \code{"++"} uses an algorithm similar to k-means++, i.e. promotes diversity among initial centers by iteractively choosing the next center with probability proportional to its VI distance from the closest already chosen center;
-#'    \item \code{"random_partition"} initializes by randomly assigning each data point to one of $L$ groups, and the center for each group is chosen based on these assignments;
-#'    \item \code{"+++"} implements the k-means++ initialization using by choosing from the MCMC samples and the partitions obtained from hierarchical clustering (average and complete);
+#'    \item \code{"+++"} implements the k-means++ initialization using by choosing from the MCMC samples and the partitions obtained from hierarchical clustering (average and complete). Warning: Initialization method \code{"+++"} is deprecated and will be removed in future versions. Use \code{"++"} instead.
 #'    \item \code{"topvi"} initializes with the $L$ partitions with smallest EVI, chosen from the ones generated by \code{"average"}, \code{"complete"} and \code{"fixed"} (if \code{part.init} is provided).
 #' }
-#' The WASABI algorithm iteratively updates the particles by computing the region of attractions (i.e. the assignment of each MCMC sample to the closest particle), in the N-update step, and finding the minEVI(minEBinder) particle for each group, in the VI-search step.
+#' The WASABI algorithm iteratively updates the particles by computing the region of attractions (i.e. the assignment of each MCMC sample to the closest particle), in the N-update step, and finding the minEVI particle for each group, in the VI-search step.
 #' The VI-search step can rely on different algorithms for finding the minEVI particle, depending on the \code{method} argument:
 #' \itemize{
-#'    \item \code{"average"} and \code{"complete"} use hierarchical clustering to find the minEVI(minBinder) particle;
+#'    \item \code{"salso"} uses the \code{salso} package to find the minEVI particle.
+#'    \item \code{"average"} and \code{"complete"} use hierarchical clustering to find the minEVI particle;
 #'    \item \code{"greedy"} uses the greedy algorithm implemented in \code{MinimiseEPL} of the \code{GreedyEPL} package;
-#'    \item \code{"salso"} uses the \code{salso} package to find the minEVI(minBinder) particle.
 #' }
 #'
 #' @seealso WASABI_multistart, elbow
@@ -84,31 +85,28 @@
 #' cls.draw = est_model$clust
 #' psm=mcclust::comp.psm(cls.draw+1)
 #' # if running WASABI once, a non-random initialization is recommended, such as "topvi" or "average"
-#' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso", loss = "VI")
+#' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso")
 #'
 #' # for larger n, it can be faster to use mini.batch
-#' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso", loss = "VI"
+#' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso",
 #'                      mini.batch = 200, max.iter = 20, extra.iter = 10)
 #' }
-WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
-                   method.init = c("++", "average", "complete", "fixed",  "+++", "topvi"),
-                       lb = FALSE, thin.init = NULL, part.init = NULL,
-                       method = c("salso", "average", "complete", "greedy"),
-                       max.k = NULL, max.iter = 10, eps = 0.0001, mini.batch = 200,
-                       extra.iter = NULL,
-                       swap_countone = FALSE,
-                       suppress.comment = TRUE,
-                       return_psm = FALSE,
-                       seed = NULL,
-                       loss = c("VI", "Binder","omARI"), a = 1, ...) {
+WASABI <- function(cls.draw = NULL, L = 4, psm = NULL,
+                   method.init = c("++", "average", "complete", "fixed", "+++", "topvi"),
+                   lb = FALSE, thin.init = NULL, part.init = NULL,
+                   method = c("salso", "average", "complete", "greedy"),
+                   max.k = NULL, max.iter = 10, eps = 0.0001, mini.batch = 200,
+                   extra.iter = NULL,
+                   swap_countone = FALSE,
+                   suppress.comment = TRUE,
+                   return_psm = FALSE,
+                   seed = NULL,
+                   loss = c("VI","Binder","omARI"),
+                   a = 1, ...){
   method.init <- match.arg(method.init, choices = method.init)
   method <- match.arg(method, choices = method)
   if (is.null(cls.draw)) {
     stop("cls.draw must be provided")
-  }
-
-  if (is.null(loss)) {
-    stop("loss function must be provided")
   }
 
   if (method == "greedy") {
@@ -147,16 +145,24 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
     warning("Initialization method '+++' is deprecated and will be removed in future versions. Use '++' instead.")
   }
 
-  if (loss == "omARI" & a != 1) {
-    stop("omARI loss is only defined for a = 1")
-  }
-
-  if (method == "greedy" & a != 1) {
-    stop("Greedy method is only defined for a = 1")
-  }
-
   if (!is.null(seed)) {
     set.seed(seed)
+  }
+
+  if (loss != "VI" & loss != "Binder" & loss != "omARI"){
+    stop("loss type must be one of 'VI','Binder' and 'omARI'.")
+  }
+
+  if (loss == "omARI" & a != 1){
+    stop("a != 1 is not defined for omARI.")
+  }
+
+  if (a < 0 | a > 2){
+    stop("a takes value between 0 and 2.")
+  }
+
+  if (lb == TRUE & (loss != "VI" | a != 1)){
+    stop("lower bound option is only valid for Generalized VI")
   }
 
   cls.draw <- t(apply(cls.draw, 1, relabel_partition))
@@ -167,6 +173,7 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
   S <- dim(cls.draw)[1]
   part <- matrix(0, L, n)
   part.evi <- rep(0, L)
+
   eps <- eps * log2(n)
 
   if (is.null(max.k)) max.k <- (max(Ks.draw) + 10)
@@ -178,9 +185,9 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
   }
 
   if (L == 1) {
-    if (loss == "VI"){
-      # no need to do the full algorithm (we only need the VI-search step):
-      if (method == "average" | method == "complete") {
+    # no need to do the full algorithm (we only need the VI-search step):
+    if (method == "average" | method == "complete") {
+      if (loss == "VI"){
         out <- minVI_hclust(cls.draw_relab, Ks.draw,
                             psm, method, max.k, lb,
                             L = 1, a = a
@@ -188,73 +195,14 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
         part[L, ] <- out$part
         part.evi[L] <- out$evi
       }
-      if (method == "greedy") {
-        if ( a  == 1){
-        output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
-                                                par =
-                                                  list(Kup = max.k, loss_type = "VI")
-        ) # initializing part is randomly sampled
-        part[L, ] <- output_minepl$decision
-        part.evi[L] <- output_minepl$EPL
-        } else {
-          stop("Greedy method is only defined for a = 1")
-        }
-      }
-      if (method == "salso") {
-        output_salso <- salso::salso(x = cls.draw_relab, loss = VI(a = a), ...)
-        part[L, ] <- as.numeric(output_salso)
-        part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
-      }
-      psm_ret = list(psm)
-      if(return_psm & is.null(psm_ret)) {
-        psm_ret <- list(mcclust::comp.psm(cls.draw))
-      }
-      output <- list(
-        particles = part, EVI = part.evi, wass.dist = sum(part.evi),
-        part.psm = psm_ret, part.weights = 1, draws.assign = NULL
-      )
-      return(output)
-    }
-
-    else if (loss == "Binder"){
-      if (method == "average" | method == "complete") {
+      else if (loss == "Binder"){
         out <- minB_hclust(cls.draw_relab, Ks.draw,
                            psm, method, max.k, lb,
                            L = 1, a = a
         )
         part[L, ] <- out$part
         part.evi[L] <- out$evi
-      }
-      if (method == "greedy") {
-        if ( a == 1){
-        output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
-                                                par =
-                                                  list(Kup = max.k, loss_type = "B")
-        ) # initializing part is randomly sampled
-        part[L, ] <- output_minepl$decision
-        part.evi[L] <- output_minepl$EPL
-        } else {
-          stop("Greedy method is only defined for a = 1")
-        }
-      }
-      if (method == "salso") {
-        output_salso <- salso::salso(x = cls.draw_relab, loss = binder(a = a),...)
-        part[L, ] <- as.numeric(output_salso)
-        part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
-      }
-      psm_ret = list(psm)
-      if(return_psm & is.null(psm_ret)) {
-        psm_ret <- list(mcclust::comp.psm(cls.draw))
-      }
-      output <- list(
-        particles = part, EVI = part.evi, wass.dist = sum(part.evi),
-        part.psm = psm_ret, part.weights = 1, draws.assign = NULL
-      )
-      return(output)
-    }
-
-    else if (loss == "omARI"){
-      if (method == "average" | method == "complete") {
+      } else if (loss == "omARI"){
         out <- minomARI_hclust(cls.draw_relab, Ks.draw,
                                psm, method, max.k, lb,
                                L = 1
@@ -262,26 +210,67 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
         part[L, ] <- out$part
         part.evi[L] <- out$evi
       }
-      if (method == "greedy") {
-        stop("omARI loss is not supported for greedy method.")
+    }
+    if (method == "greedy") {
+      if ( a == 1 ){
+        if (loss == "VI"){
+          output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
+                                                  par =
+                                                    list(Kup = max.k, loss_type = "VI")
+          ) # initializing part is randomly sampled
+          part[L, ] <- output_minepl$decision
+          part.evi[L] <- output_minepl$EPL
+        } else if (loss == "Binder"){
+          output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
+                                                  par =
+                                                    list(Kup = max.k, loss_type = "B")
+          ) # initializing part is randomly sampled
+          part[L, ] <- output_minepl$decision
+          part.evi[L] <- output_minepl$EPL
+        } else if (loss == "omARI"){
+          stop("greedy method has not been implemented for loss type 'omARI'")
+        }
       }
-      if (method == "salso") {
+      else{
+        stop("greedy method has not been implemented for a != 1")
+      }
+    }
+    if (method == "salso") {
+      if (loss == "VI"){
+        output_salso <- salso::salso(x = cls.draw_relab, loss = VI(a = a), ...)
+        part[L, ] <- as.numeric(output_salso)
+        part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
+      } else if (loss == "Binder"){
+        output_salso <- salso::salso(x = cls.draw_relab, loss = binder(a = a), ...)
+        part[L, ] <- as.numeric(output_salso)
+        part.evi[L] <- as.numeric(attr(output_salso, "info")[4])
+      } else if (loss == "omARI"){
         output_salso <- salso::salso(x = cls.draw_relab, loss = omARI(), ...)
         part[L, ] <- as.numeric(output_salso)
         part.evi[L] <- as.numeric(attr(output_salso, "info")[3])
       }
-      psm_ret = list(psm)
-      if(return_psm & is.null(psm_ret)) {
-        psm_ret <- list(mcclust::comp.psm(cls.draw))
-      }
+    }
+    psm_ret = list(psm)
+    if(return_psm & is.null(psm_ret)) {
+      psm_ret <- list(mcclust::comp.psm(cls.draw))
+    }
+    if (loss == "VI"){
       output <- list(
         particles = part, EVI = part.evi, wass.dist = sum(part.evi),
         part.psm = psm_ret, part.weights = 1, draws.assign = NULL
       )
-      return(output)
-    } else {
-      stop("loss must be one of 'VI', 'Binder' or 'omARI'")
+    } else if (loss == "Binder"){
+      output <- list(
+        particles = part, EB = part.evi, wass.dist = sum(part.evi),
+        part.psm = psm_ret, part.weights = 1, draws.assign = NULL
+      )
+    } else if (loss == "omARI"){
+      output <- list(
+        particles = part, EomARI = part.evi, wass.dist = sum(part.evi),
+        part.psm = psm_ret, part.weights = 1, draws.assign = NULL
+      )
     }
+    return(output)
   }
 
   if (is.null(thin.init)) {
@@ -292,8 +281,9 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
   }
 
   # ------------------------------------------ Initialization ------------------------------------------
-  if (loss == "VI"){
-    if (method.init == "average" | method.init == "topvi") {
+
+  if (method.init == "average" | method.init == "topvi") {
+    if (loss == "VI"){
       out <- minVI_hclust(
         cls.draw_relab[seq(1, S, thin.init), ],
         Ks.draw[seq(1, S, thin.init)],
@@ -310,207 +300,11 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
       if (suppress.comment == FALSE & method.init != "topvi") {
         cat(paste(
           paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(": number of clusters = ", apply(part, 1, max)),
           paste0(", EVI = ", round(part.evi, 3)), "\n"
         ))
       }
-    }
-
-    if (method.init == "complete" | method.init == "topvi") {
-      out <- minVI_hclust(
-        cls.draw_relab[seq(1, S, thin.init), ],
-        Ks.draw[seq(1, S, thin.init)],
-        psm, "complete",
-        max.k, lb, L, a = a
-      )
-      part <- out$part
-      part.evi <- out$evi
-
-      if (method.init == "topvi") {
-        part_all <- rbind(part_all, part)
-        part.evi_all <- c(part.evi_all, part.evi)
-      }
-      if (suppress.comment == FALSE & method.init != "topvi") {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "fixed" | (method.init == "topvi" & !is.null(part.init))) {
-      if (lb) {
-        VI.avg <- mcclust.ext::VI.lb(part.init, psm)
-      } else {
-        part.init_relab <- t(apply(part.init, 1, relabel_partition)) - 1
-        Ks.avg <- apply(part.init_relab, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EVI_Rcpp(
-              cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
-            )
-          }
-        )
-      }
-      part <- part.init
-      part.evi <- VI.avg
-      if (method.init == "topvi") {
-        part_all <- rbind(part_all, part)
-        part.evi_all <- c(part.evi_all, part.evi)
-      }
-
-      if (suppress.comment == FALSE & method.init != "topvi") {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EB = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "++") {
-      part <- matrix(0, L, n)
-      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ] # cls.draw.thin will be 0-indexed
-      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
-      S.thin <- nrow(cls.draw.thin)
-      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
-      K.part <- max(part[1, ]) + 1
-      for (k in 2:L) {
-        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
-        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
-        vi.init <- apply(tmp, 1, min)
-        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
-        # ik = sample_max_jit(vi.init)
-        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
-        # jit = 0.0001
-        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-        # ik = which(stats::rmultinom(1, 1, prob) == 1)
-        part[k, ] <- cls.draw.thin[ik, ]
-        K.part <- c(K.part, max(part[k, ]) + 1)
-      }
-      if (lb) {
-        VI.avg <- mcclust.ext::VI.lb(part, psm)
-      } else {
-        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EVI_Rcpp(
-              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
-            )
-          }
-        )
-      }
-      part.evi <- VI.avg
-      part <- part + 1
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "+++") {
-
-      part <- matrix(0, L, n)
-      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ]
-      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
-      S.thin <- nrow(cls.draw.thin)
-
-      # add the partitions from hierarchical clustering
-      # if(is.null(max.k)) max.k <- ceiling(sqrt(n)) # ceiling(n/8)
-      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "complete")
-      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
-      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
-      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
-      S.thin <- S.thin + max.k
-
-      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "average")
-      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
-      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
-      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
-      S.thin <- S.thin + max.k
-
-      if (!is.null(part.init)) {
-        if (dim(part.init)[2] != dim(cls.draw)[2]) {
-          warning("part.init cannot be used for +++ initialization, wrong dimension.")
-        } else {
-          part.init <- t(apply(part.init, 1, relabel_partition))
-          cls.draw.thin <- rbind(cls.draw.thin, part.init - 1)
-          Ks.thin <- c(Ks.thin, apply(part.init, 1, function(x) max(x)))
-          S.thin <- S.thin + dim(part.init)[1]
-        }
-      }
-
-      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
-      K.part <- max(part[1, ]) + 1
-      for (k in 2:L) {
-        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
-        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
-        vi.init <- apply(tmp, 1, min)
-        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
-        # ik = sample_max_jit(vi.init)
-        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
-        # jit = 0.0001
-        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-        # ik = which(stats::rmultinom(1, 1, prob) == 1)
-        part[k, ] <- cls.draw.thin[ik, ]
-        K.part <- c(K.part, max(part[k, ]) + 1)
-      }
-      if (lb) {
-        VI.avg <- mcclust.ext::VI.lb(part, psm)
-      } else {
-        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EVI_Rcpp(
-              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
-            )
-          }
-        )
-      }
-      part.evi <- VI.avg
-      # let's bring them back to 1-index
-      part <- part + 1
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "topvi") {
-      # these also avoids repeated partitions
-      tmp_reorder <- reorder_find_unique(dim(part_all)[1], dim(part_all)[2], part_all)
-      part.evi_all <- part.evi_all[tmp_reorder$config_index]
-      part_all <- part_all[tmp_reorder$config_index, ]
-      sortvals <- sort(part.evi_all, index.return = T, decreasing = F)
-      part.evi <- sortvals$x[1:L]
-      part <- part_all[sortvals$ix[1:L], ]
-
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EVI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-  } else if (loss == "Binder"){
-    # --------------------------------------------------Binder----------------------------------------------
-    if (method.init == "average" | method.init == "topvi") {
+    } else if (loss == "Binder"){
       out <- minB_hclust(
         cls.draw_relab[seq(1, S, thin.init), ],
         Ks.draw[seq(1, S, thin.init)],
@@ -527,207 +321,11 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
       if (suppress.comment == FALSE & method.init != "topvi") {
         cat(paste(
           paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(": number of clusters = ", apply(part, 1, max)),
           paste0(", EB = ", round(part.evi, 3)), "\n"
         ))
       }
-    }
-
-    if (method.init == "complete" | method.init == "topvi") {
-      out <- minB_hclust(
-        cls.draw_relab[seq(1, S, thin.init), ],
-        Ks.draw[seq(1, S, thin.init)],
-        psm, "complete",
-        max.k, lb, L, a = a
-      )
-      part <- out$part
-      part.evi <- out$evi
-
-      if (method.init == "topvi") {
-        part_all <- rbind(part_all, part)
-        part.evi_all <- c(part.evi_all, part.evi)
-      }
-      if (suppress.comment == FALSE & method.init != "topvi") {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EB = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "fixed" | (method.init == "topvi" & !is.null(part.init))) {
-      if (lb) {
-        stop("lowerbound is not used for binder loss")
-      } else {
-        part.init_relab <- t(apply(part.init, 1, relabel_partition)) - 1
-        Ks.avg <- apply(part.init_relab, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EB_Rcpp(
-              cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
-            )
-          }
-        )
-      }
-      part <- part.init
-      part.evi <- VI.avg
-      if (method.init == "topvi") {
-        part_all <- rbind(part_all, part)
-        part.evi_all <- c(part.evi_all, part.evi)
-      }
-
-      if (suppress.comment == FALSE & method.init != "topvi") {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EB = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "++") {
-      part <- matrix(0, L, n)
-      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ] # cls.draw.thin will be 0-indexed
-      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
-      S.thin <- nrow(cls.draw.thin)
-      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
-      K.part <- max(part[1, ]) + 1
-      for (k in 2:L) {
-        tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
-        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
-        vi.init <- apply(tmp, 1, min)
-        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
-        # ik = sample_max_jit(vi.init)
-        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
-        # jit = 0.0001
-        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-        # ik = which(stats::rmultinom(1, 1, prob) == 1)
-        part[k, ] <- cls.draw.thin[ik, ]
-        K.part <- c(K.part, max(part[k, ]) + 1)
-      }
-      if (lb) {
-        stop("lower bound is not used for binder loss")
-      } else {
-        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EB_Rcpp(
-              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
-            )
-          }
-        )
-      }
-      part.evi <- VI.avg
-      part <- part + 1
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EB = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "+++") {
-
-      part <- matrix(0, L, n)
-      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ]
-      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
-      S.thin <- nrow(cls.draw.thin)
-
-      # add the partitions from hierarchical clustering
-      # if(is.null(max.k)) max.k <- ceiling(sqrt(n)) # ceiling(n/8)
-      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "complete")
-      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
-      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
-      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
-      S.thin <- S.thin + max.k
-
-      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "average")
-      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
-      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
-      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
-      S.thin <- S.thin + max.k
-
-      if (!is.null(part.init)) {
-        if (dim(part.init)[2] != dim(cls.draw)[2]) {
-          warning("part.init cannot be used for +++ initialization, wrong dimension.")
-        } else {
-          part.init <- t(apply(part.init, 1, relabel_partition))
-          cls.draw.thin <- rbind(cls.draw.thin, part.init - 1)
-          Ks.thin <- c(Ks.thin, apply(part.init, 1, function(x) max(x)))
-          S.thin <- S.thin + dim(part.init)[1]
-        }
-      }
-
-      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
-      K.part <- max(part[1, ]) + 1
-      for (k in 2:L) {
-        tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
-        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
-        vi.init <- apply(tmp, 1, min)
-        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
-        # ik = sample_max_jit(vi.init)
-        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
-        # jit = 0.0001
-        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-        # ik = which(stats::rmultinom(1, 1, prob) == 1)
-        part[k, ] <- cls.draw.thin[ik, ]
-        K.part <- c(K.part, max(part[k, ]) + 1)
-      }
-      if (lb) {
-        stop("lower bound is not used for binder loss")
-      } else {
-        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EB_Rcpp(
-              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
-            )
-          }
-        )
-      }
-      part.evi <- VI.avg
-      # let's bring them back to 1-index
-      part <- part + 1
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EB = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "topvi") {
-      # these also avoids repeated partitions
-      tmp_reorder <- reorder_find_unique(dim(part_all)[1], dim(part_all)[2], part_all)
-      part.evi_all <- part.evi_all[tmp_reorder$config_index]
-      part_all <- part_all[tmp_reorder$config_index, ]
-      sortvals <- sort(part.evi_all, index.return = T, decreasing = F)
-      part.evi <- sortvals$x[1:L]
-      part <- part_all[sortvals$ix[1:L], ]
-
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EB = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-  } else if (loss == "omARI"){
-    # --------------------------------------------------omARI----------------------------------------------
-    if (method.init == "average" | method.init == "topvi") {
+    } else if (loss == "omARI"){
       out <- minomARI_hclust(
         cls.draw_relab[seq(1, S, thin.init), ],
         Ks.draw[seq(1, S, thin.init)],
@@ -744,216 +342,552 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
       if (suppress.comment == FALSE & method.init != "topvi") {
         cat(paste(
           paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(": number of clusters = ", apply(part, 1, max)),
           paste0(", EomARI = ", round(part.evi, 3)), "\n"
         ))
       }
     }
-
-    if (method.init == "complete" | method.init == "topvi") {
-      out <- minomARI_hclust(
-        cls.draw_relab[seq(1, S, thin.init), ],
-        Ks.draw[seq(1, S, thin.init)],
-        psm, "complete",
-        max.k, lb, L
-      )
-      part <- out$part
-      part.evi <- out$evi
-
-      if (method.init == "topvi") {
-        part_all <- rbind(part_all, part)
-        part.evi_all <- c(part.evi_all, part.evi)
-      }
-      if (suppress.comment == FALSE & method.init != "topvi") {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EomARI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "fixed" | (method.init == "topvi" & !is.null(part.init))) {
-      if (lb) {
-        stop("lowerbound is not used for omARI loss")
-      } else {
-        part.init_relab <- t(apply(part.init, 1, relabel_partition)) - 1
-        Ks.avg <- apply(part.init_relab, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EomARI_Rcpp(
-              cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
-            )
-          }
-        )
-      }
-      part <- part.init
-      part.evi <- VI.avg
-      if (method.init == "topvi") {
-        part_all <- rbind(part_all, part)
-        part.evi_all <- c(part.evi_all, part.evi)
-      }
-
-      if (suppress.comment == FALSE & method.init != "topvi") {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EomARI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "++") {
-      part <- matrix(0, L, n)
-      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ] # cls.draw.thin will be 0-indexed
-      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
-      S.thin <- nrow(cls.draw.thin)
-      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
-      K.part <- max(part[1, ]) + 1
-      for (k in 2:L) {
-        tmp <- omARI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
-        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
-        vi.init <- apply(tmp, 1, min)
-        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
-        # ik = sample_max_jit(vi.init)
-        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
-        # jit = 0.0001
-        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-        # ik = which(stats::rmultinom(1, 1, prob) == 1)
-        part[k, ] <- cls.draw.thin[ik, ]
-        K.part <- c(K.part, max(part[k, ]) + 1)
-      }
-      if (lb) {
-        stop("lower bound is not valid for omARI loss")
-      } else {
-        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EomARI_Rcpp(
-              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
-            )
-          }
-        )
-      }
-      part.evi <- VI.avg
-      part <- part + 1
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EomARI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "+++") {
-
-      part <- matrix(0, L, n)
-      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ]
-      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
-      S.thin <- nrow(cls.draw.thin)
-
-      # add the partitions from hierarchical clustering
-      # if(is.null(max.k)) max.k <- ceiling(sqrt(n)) # ceiling(n/8)
-      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "complete")
-      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
-      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
-      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
-      S.thin <- S.thin + max.k
-
-      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "average")
-      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
-      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
-      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
-      S.thin <- S.thin + max.k
-
-      if (!is.null(part.init)) {
-        if (dim(part.init)[2] != dim(cls.draw)[2]) {
-          warning("part.init cannot be used for +++ initialization, wrong dimension.")
-        } else {
-          part.init <- t(apply(part.init, 1, relabel_partition))
-          cls.draw.thin <- rbind(cls.draw.thin, part.init - 1)
-          Ks.thin <- c(Ks.thin, apply(part.init, 1, function(x) max(x)))
-          S.thin <- S.thin + dim(part.init)[1]
-        }
-      }
-
-      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
-      K.part <- max(part[1, ]) + 1
-      for (k in 2:L) {
-        tmp <- omARI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
-        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
-        vi.init <- apply(tmp, 1, min)
-        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
-        # ik = sample_max_jit(vi.init)
-        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
-        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
-        # jit = 0.0001
-        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
-        # ik = which(stats::rmultinom(1, 1, prob) == 1)
-        part[k, ] <- cls.draw.thin[ik, ]
-        K.part <- c(K.part, max(part[k, ]) + 1)
-      }
-      if (lb) {
-        stop("lower bound is not valid for binder loss")
-      } else {
-        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
-        VI.avg <- sapply(
-          1:L,
-          function(i) {
-            EomARI_Rcpp(
-              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
-              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
-            )
-          }
-        )
-      }
-      part.evi <- VI.avg
-      # let's bring them back to 1-index
-      part <- part + 1
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EomARI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-
-    if (method.init == "topvi") {
-      # these also avoids repeated partitions
-      tmp_reorder <- reorder_find_unique(dim(part_all)[1], dim(part_all)[2], part_all)
-      part.evi_all <- part.evi_all[tmp_reorder$config_index]
-      part_all <- part_all[tmp_reorder$config_index, ]
-      sortvals <- sort(part.evi_all, index.return = T, decreasing = F)
-      part.evi <- sortvals$x[1:L]
-      part <- part_all[sortvals$ix[1:L], ]
-
-      if (suppress.comment == FALSE) {
-        cat(paste(
-          paste0("Initial particle ", c(1:L)),
-          paste0(": number of clusters=", apply(part, 1, max)),
-          paste0(", EomARI = ", round(part.evi, 3)), "\n"
-        ))
-      }
-    }
-  } else {
-    stop("loss must be one of 'VI', 'Binder', or 'omARI'")
   }
 
+  if (method.init == "complete" | method.init == "topvi") {
+    if (loss == "VI"){
+      out <- minVI_hclust(
+        cls.draw_relab[seq(1, S, thin.init), ],
+        Ks.draw[seq(1, S, thin.init)],
+        psm, "complete",
+        max.k, lb, L, a = a
+      )
+      part <- out$part
+      part.evi <- out$evi
+
+      if (method.init == "topvi") {
+        part_all <- rbind(part_all, part)
+        part.evi_all <- c(part.evi_all, part.evi)
+      }
+      if (suppress.comment == FALSE & method.init != "topvi") {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters = ", apply(part, 1, max)),
+          paste0(", EVI = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    } else if (loss == "Binder"){
+      out <- minB_hclust(
+        cls.draw_relab[seq(1, S, thin.init), ],
+        Ks.draw[seq(1, S, thin.init)],
+        psm, "complete",
+        max.k, lb, L, a = a
+      )
+      part <- out$part
+      part.evi <- out$evi
+
+      if (method.init == "topvi") {
+        part_all <- rbind(part_all, part)
+        part.evi_all <- c(part.evi_all, part.evi)
+      }
+      if (suppress.comment == FALSE & method.init != "topvi") {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters = ", apply(part, 1, max)),
+          paste0(", EB = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    } else if (loss == "omARI"){
+      out <- minomARI_hclust(
+        cls.draw_relab[seq(1, S, thin.init), ],
+        Ks.draw[seq(1, S, thin.init)],
+        psm, "complete",
+        max.k, lb, L
+      )
+      part <- out$part
+      part.evi <- out$evi
+
+      if (method.init == "topvi") {
+        part_all <- rbind(part_all, part)
+        part.evi_all <- c(part.evi_all, part.evi)
+      }
+      if (suppress.comment == FALSE & method.init != "topvi") {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters = ", apply(part, 1, max)),
+          paste0(", EomARI = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    }
+  }
+
+  if (method.init == "fixed" | (method.init == "topvi" & !is.null(part.init))) {
+    if (loss == "VI"){
+      if (lb) {
+        VI.fxd <- mcclust.ext::VI.lb(part.init, psm)
+      } else {
+        part.init_relab <- t(apply(part.init, 1, relabel_partition)) - 1
+        Ks.fxd <- apply(part.init_relab, 1, function(x) max(x)) + 1
+        VI.fxd <- sapply(
+          1:L,
+          function(i) {
+            EVI_Rcpp(
+              cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+              Ks = Ks.fxd[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
+            )
+          }
+        )
+      }
+      part <- part.init
+      part.evi <- VI.fxd
+      if (method.init == "topvi") {
+        part_all <- rbind(part_all, part)
+        part.evi_all <- c(part.evi_all, part.evi)
+      }
+
+      if (suppress.comment == FALSE & method.init != "topvi") {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters = ", apply(part, 1, max)),
+          paste0(", EVI = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    } else if (loss == "Binder"){
+      part.init_relab <- t(apply(part.init, 1, relabel_partition)) - 1
+      Ks.avg <- apply(part.init_relab, 1, function(x) max(x)) + 1
+      VI.avg <- sapply(
+        1:L,
+        function(i) {
+          EB_Rcpp(
+            cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+            Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
+          )
+        }
+      )
+      part <- part.init
+      part.evi <- VI.avg
+      if (method.init == "topvi") {
+        part_all <- rbind(part_all, part)
+        part.evi_all <- c(part.evi_all, part.evi)
+      }
+
+      if (suppress.comment == FALSE & method.init != "topvi") {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EB = ", round(part.evi, 3)), "\n"
+        ))
+      }} else if (loss == "omARI"){
+        part.init_relab <- t(apply(part.init, 1, relabel_partition)) - 1
+        Ks.avg <- apply(part.init_relab, 1, function(x) max(x)) + 1
+        VI.avg <- sapply(
+          1:L,
+          function(i) {
+            EomARI_Rcpp(
+              cls = part.init_relab[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+            )
+          }
+        )
+        part <- part.init
+        part.evi <- VI.avg
+        if (method.init == "topvi") {
+          part_all <- rbind(part_all, part)
+          part.evi_all <- c(part.evi_all, part.evi)
+        }
+
+        if (suppress.comment == FALSE & method.init != "topvi") {
+          cat(paste(
+            paste0("Initial particle ", c(1:L)),
+            paste0(": number of clusters=", apply(part, 1, max)),
+            paste0(", EomARI = ", round(part.evi, 3)), "\n"
+          ))
+        }
+      }
+  }
+
+  if (method.init == "++") {
+    if (loss == "VI"){
+      part <- matrix(0, L, n)
+      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ] # cls.draw.thin will be 0-indexed
+      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
+      S.thin <- nrow(cls.draw.thin)
+      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
+      K.part <- max(part[1, ]) + 1
+      for (k in 2:L) {
+        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
+        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
+        vi.init <- apply(tmp, 1, min)
+        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+        # ik = sample_max_jit(vi.init)
+        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
+        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+        # jit = 0.0001
+        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
+        # ik = which(stats::rmultinom(1, 1, prob) == 1)
+        part[k, ] <- cls.draw.thin[ik, ]
+        K.part <- c(K.part, max(part[k, ]) + 1)
+      }
+      if (lb) {
+        VI.pp <- mcclust.ext::VI.lb(part, psm)
+      } else {
+        Ks.pp <- apply(part, 1, function(x) max(x)) + 1
+        VI.pp <- sapply(
+          1:L,
+          function(i) {
+            EVI_Rcpp(
+              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+              Ks = Ks.pp[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
+            )
+          }
+        )
+      }
+      part.evi <- VI.pp
+      part <- part + 1
+      if (suppress.comment == FALSE) {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EVI = ", round(part.evi, 3)), "\n"
+        ))
+      }} else if (loss == "Binder"){
+        part <- matrix(0, L, n)
+        cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ] # cls.draw.thin will be 0-indexed
+        Ks.thin <- Ks.draw[seq(1, S, thin.init)]
+        S.thin <- nrow(cls.draw.thin)
+        part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
+        K.part <- max(part[1, ]) + 1
+        for (k in 2:L) {
+          tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
+          tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
+          vi.init <- apply(tmp, 1, min)
+          ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+          # ik = sample_max_jit(vi.init)
+          ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
+          # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+          # jit = 0.0001
+          # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
+          # ik = which(stats::rmultinom(1, 1, prob) == 1)
+          part[k, ] <- cls.draw.thin[ik, ]
+          K.part <- c(K.part, max(part[k, ]) + 1)
+        }
+        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
+        VI.avg <- sapply(
+          1:L,
+          function(i) {
+            EB_Rcpp(
+              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
+            )
+          }
+        )
+        part.evi <- VI.avg
+        part <- part + 1
+        if (suppress.comment == FALSE) {
+          cat(paste(
+            paste0("Initial particle ", c(1:L)),
+            paste0(": number of clusters=", apply(part, 1, max)),
+            paste0(", EB = ", round(part.evi, 3)), "\n"
+          ))
+        }
+      } else if (loss == "omARI"){
+        part <- matrix(0, L, n)
+        cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ] # cls.draw.thin will be 0-indexed
+        Ks.thin <- Ks.draw[seq(1, S, thin.init)]
+        S.thin <- nrow(cls.draw.thin)
+        part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
+        K.part <- max(part[1, ]) + 1
+        for (k in 2:L) {
+          tmp <- omARI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
+          tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
+          vi.init <- apply(tmp, 1, min)
+          ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+          # ik = sample_max_jit(vi.init)
+          ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
+          # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+          # jit = 0.0001
+          # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
+          # ik = which(stats::rmultinom(1, 1, prob) == 1)
+          part[k, ] <- cls.draw.thin[ik, ]
+          K.part <- c(K.part, max(part[k, ]) + 1)
+        }
+        Ks.avg <- apply(part, 1, function(x) max(x)) + 1
+        VI.avg <- sapply(
+          1:L,
+          function(i) {
+            EomARI_Rcpp(
+              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+              Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+            )
+          }
+        )
+        part.evi <- VI.avg
+        part <- part + 1
+        if (suppress.comment == FALSE) {
+          cat(paste(
+            paste0("Initial particle ", c(1:L)),
+            paste0(": number of clusters=", apply(part, 1, max)),
+            paste0(", EomARI = ", round(part.evi, 3)), "\n"
+          ))
+        }
+      }
+  }
+
+  if (method.init == "+++") {
+    if (loss == "VI"){
+      part <- matrix(0, L, n)
+      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ]
+      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
+      S.thin <- nrow(cls.draw.thin)
+
+      # add the partitions from hierarchical clustering
+      # if(is.null(max.k)) max.k <- ceiling(sqrt(n)) # ceiling(n/8)
+      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "complete")
+      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
+      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
+      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
+      S.thin <- S.thin + max.k
+
+      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "average")
+      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
+      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
+      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
+      S.thin <- S.thin + max.k
+
+      if (!is.null(part.init)) {
+        if (dim(part.init)[2] != dim(cls.draw)[2]) {
+          warning("part.init cannot be used for +++ initialization, wrong dimension.")
+        } else {
+          part.init <- t(apply(part.init, 1, relabel_partition))
+          cls.draw.thin <- rbind(cls.draw.thin, part.init - 1)
+          Ks.thin <- c(Ks.thin, apply(part.init, 1, function(x) max(x)))
+          S.thin <- S.thin + dim(part.init)[1]
+        }
+      }
+
+      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
+      K.part <- max(part[1, ]) + 1
+      for (k in 2:L) {
+        tmp <- VI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
+        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
+        vi.init <- apply(tmp, 1, min)
+        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+        # ik = sample_max_jit(vi.init)
+        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
+        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+        # jit = 0.0001
+        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
+        # ik = which(stats::rmultinom(1, 1, prob) == 1)
+        part[k, ] <- cls.draw.thin[ik, ]
+        K.part <- c(K.part, max(part[k, ]) + 1)
+      }
+      if (lb) {
+        VI.ppp <- mcclust.ext::VI.lb(part, psm)
+      } else {
+        Ks.ppp <- apply(part, 1, function(x) max(x)) + 1
+        VI.ppp <- sapply(
+          1:L,
+          function(i) {
+            EVI_Rcpp(
+              cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+              Ks = Ks.ppp[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
+            )
+          }
+        )
+      }
+      part.evi <- VI.ppp
+      # let's bring them back to 1-index
+      part <- part + 1
+      if (suppress.comment == FALSE) {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EVI = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    } else if (loss == "Binder"){
+      part <- matrix(0, L, n)
+      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ]
+      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
+      S.thin <- nrow(cls.draw.thin)
+
+      # add the partitions from hierarchical clustering
+      # if(is.null(max.k)) max.k <- ceiling(sqrt(n)) # ceiling(n/8)
+      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "complete")
+      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
+      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
+      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
+      S.thin <- S.thin + max.k
+
+      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "average")
+      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
+      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
+      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
+      S.thin <- S.thin + max.k
+
+      if (!is.null(part.init)) {
+        if (dim(part.init)[2] != dim(cls.draw)[2]) {
+          warning("part.init cannot be used for +++ initialization, wrong dimension.")
+        } else {
+          part.init <- t(apply(part.init, 1, relabel_partition))
+          cls.draw.thin <- rbind(cls.draw.thin, part.init - 1)
+          Ks.thin <- c(Ks.thin, apply(part.init, 1, function(x) max(x)))
+          S.thin <- S.thin + dim(part.init)[1]
+        }
+      }
+
+      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
+      K.part <- max(part[1, ]) + 1
+      for (k in 2:L) {
+        tmp <- Binder_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part, a = a)
+        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
+        vi.init <- apply(tmp, 1, min)
+        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+        # ik = sample_max_jit(vi.init)
+        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
+        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+        # jit = 0.0001
+        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
+        # ik = which(stats::rmultinom(1, 1, prob) == 1)
+        part[k, ] <- cls.draw.thin[ik, ]
+        K.part <- c(K.part, max(part[k, ]) + 1)
+      }
+      Ks.avg <- apply(part, 1, function(x) max(x)) + 1
+      VI.avg <- sapply(
+        1:L,
+        function(i) {
+          EB_Rcpp(
+            cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+            Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)], a = a
+          )
+        }
+      )
+      part.evi <- VI.avg
+      # let's bring them back to 1-index
+      part <- part + 1
+      if (suppress.comment == FALSE) {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EB = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    } else if (loss == "omARI"){
+      part <- matrix(0, L, n)
+      cls.draw.thin <- cls.draw_relab[seq(1, S, thin.init), ]
+      Ks.thin <- Ks.draw[seq(1, S, thin.init)]
+      S.thin <- nrow(cls.draw.thin)
+
+      # add the partitions from hierarchical clustering
+      # if(is.null(max.k)) max.k <- ceiling(sqrt(n)) # ceiling(n/8)
+      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "complete")
+      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
+      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
+      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
+      S.thin <- S.thin + max.k
+
+      hclust.comp <- stats::hclust(stats::as.dist(1 - psm), method = "average")
+      cls.comp <- t(apply(matrix(1:max.k), 1, function(x) stats::cutree(hclust.comp, k = x)))
+      cls.draw.thin <- rbind(cls.draw.thin, cls.comp - 1)
+      Ks.thin <- c(Ks.thin, apply(cls.comp, 1, function(x) max(x)))
+      S.thin <- S.thin + max.k
+
+      if (!is.null(part.init)) {
+        if (dim(part.init)[2] != dim(cls.draw)[2]) {
+          warning("part.init cannot be used for +++ initialization, wrong dimension.")
+        } else {
+          part.init <- t(apply(part.init, 1, relabel_partition))
+          cls.draw.thin <- rbind(cls.draw.thin, part.init - 1)
+          Ks.thin <- c(Ks.thin, apply(part.init, 1, function(x) max(x)))
+          S.thin <- S.thin + dim(part.init)[1]
+        }
+      }
+
+      part[1, ] <- cls.draw.thin[sample(1:S.thin, 1, TRUE), ]
+      K.part <- max(part[1, ]) + 1
+      for (k in 2:L) {
+        tmp <- omARI_Rcpp(cls.draw.thin, part[1:(k - 1), , drop = FALSE], Ks.thin, K.part)
+        tmp[tmp < 0] <- 0 # sometimes numerical errors cause equal particles to have negative (small) VI, so we set them to 0
+        vi.init <- apply(tmp, 1, min)
+        ik <- which(stats::rmultinom(1, 1, vi.init / sum(vi.init)) == 1)
+        # ik = sample_max_jit(vi.init)
+        ## this is a potential idea to sample partitions that have higher vi.init values, but I (Ceci) am not sure if it fixes the problem
+        # tau = 1; ik = which(stats::rmultinom(1, 1, exp(tau * vi.init)/sum(exp(tau * vi.init)) ) == 1)
+        # jit = 0.0001
+        # prob = (vi.init/sum(vi.init) + jit)*(vi.init>0)/sum((vi.init/sum(vi.init) + jit)*(vi.init>0))
+        # ik = which(stats::rmultinom(1, 1, prob) == 1)
+        part[k, ] <- cls.draw.thin[ik, ]
+        K.part <- c(K.part, max(part[k, ]) + 1)
+      }
+      Ks.avg <- apply(part, 1, function(x) max(x)) + 1
+      VI.avg <- sapply(
+        1:L,
+        function(i) {
+          EomARI_Rcpp(
+            cls = part[i, ], cls.draw = cls.draw_relab[seq(1, S, thin.init), ],
+            Ks = Ks.avg[i], Ks.draw = Ks.draw[seq(1, S, thin.init)]
+          )
+        }
+      )
+      part.evi <- VI.avg
+      # let's bring them back to 1-index
+      part <- part + 1
+      if (suppress.comment == FALSE) {
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EomARI = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    }
+  }
+
+  if (method.init == "topvi") {
+    # these also avoids repeated partitions
+    tmp_reorder <- reorder_find_unique(dim(part_all)[1], dim(part_all)[2], part_all)
+    part.evi_all <- part.evi_all[tmp_reorder$config_index]
+    part_all <- part_all[tmp_reorder$config_index, ]
+    sortvals <- sort(part.evi_all, index.return = T, decreasing = F)
+    part.evi <- sortvals$x[1:L]
+    part <- part_all[sortvals$ix[1:L], ]
+
+    if (suppress.comment == FALSE) {
+      if (loss == "VI"){
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EVI = ", round(part.evi, 3)), "\n"
+        ))
+      } else if (loss == "Binder"){
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EB = ", round(part.evi, 3)), "\n"
+        ))
+      } else if (loss == "omARI"){
+        cat(paste(
+          paste0("Initial particle ", c(1:L)),
+          paste0(": number of clusters=", apply(part, 1, max)),
+          paste0(", EomARI = ", round(part.evi, 3)), "\n"
+        ))
+      }
+    }
+  }
 
   # ------------------------------------------ End of Initialization ------------------------------------------
 
   if (max.iter == 0) {
-    output <- list(
-      particles = part, EVI = part.evi, wass.dist = NA,
-      part.psm = NA, part.weights = NA, draws.assign = NA
-    )
+    if (loss == "VI"){
+      output <- list(
+        particles = part, EVI = part.evi, wass.dist = NA,
+        part.psm = NA, part.weights = NA, draws.assign = NA
+      )
+    } else if (loss == "Binder"){
+      output <- list(
+        particles = part, EB = part.evi, wass.dist = NA,
+        part.psm = NA, part.weights = NA, draws.assign = NA
+      )
+    } else if (loss == "omARI"){
+      output <- list(
+        particles = part, EomARI = part.evi, wass.dist = NA,
+        part.psm = NA, part.weights = NA, draws.assign = NA
+      )
+    }
     return(output)
   }
 
@@ -1056,7 +990,6 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
       particles = part_ordered, EVI = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
       part.psm = psm_K_ordered, part.weights = counts_ordered / dim(cls.draw)[1], draws.assign = assign.vi_ordered
     )
-    return(output)
   } else if (loss == "Binder"){
     #------------------------------------------------------Binder---------------------------------------------------------------
     while (iter <= max.iter & diff > eps) {
@@ -1139,10 +1072,9 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
     }
 
     output <- list(
-      particles = part_ordered, EVI = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
+      particles = part_ordered, EB = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
       part.psm = psm_K_ordered, part.weights = counts_ordered / dim(cls.draw)[1], draws.assign = assign.vi_ordered
     )
-    return(output)
   } else if (loss == "omARI"){
     #------------------------------------------------------omARI---------------------------------------------------------------
     while (iter <= max.iter & diff > eps) {
@@ -1225,11 +1157,9 @@ WASABI <- function(cls.draw = NULL, L = 10, psm = NULL,
     }
 
     output <- list(
-      particles = part_ordered, EVI = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
+      particles = part_ordered, EomARI = part.evi_ordered, wass.dist = sum(part.evi_ordered * counts_ordered / S),
       part.psm = psm_K_ordered, part.weights = counts_ordered / dim(cls.draw)[1], draws.assign = assign.vi_ordered
     )
-    return(output)
-  } else {
-    stop("loss must be one of 'VI', 'Binder', or 'omARI'")
   }
+  return(output)
 }
