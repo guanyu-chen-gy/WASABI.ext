@@ -91,7 +91,7 @@
 #' }
 elbow <- function(cls.draw, L_max = 10, psm = NULL,
                   multi.start = 1, ncores = 1,
-                  method.init = "topvi", add_topvi = FALSE, lb = TRUE,
+                  method.init = "topvi", add_topvi = FALSE, lb = FALSE,
                   thin.init = NULL, part.init = NULL,
                   method = "average",
                   max.k = NULL, max.iter = 20, eps = 0.01,
