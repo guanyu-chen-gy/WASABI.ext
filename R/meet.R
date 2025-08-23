@@ -73,6 +73,7 @@ psm.meet <- function(cls.m, output_wvi) {
 #'
 #' @param Zmat Integer matrix: S rows (samples) by n columns (data points), each row a clustering.
 #' @param Zhat Integer vector: length-n partition to compare.
+#' @param a Parameter for generalized VI takes value between 0 and 2, a = 1 by default.
 #' @return Numeric vector of length n: expected VI contribution for \code{Zhat} (each element).
 #' @export
 evi.contribution <- function(Zmat, Zhat, a = 1) {
@@ -97,6 +98,7 @@ evi.contribution <- function(Zmat, Zhat, a = 1) {
 #'
 #' @param output_wvi List: must contain \code{particles} (matrix) and \code{part.weights} (numeric vector).
 #' @param Zhat Integer vector: partition to compare.
+#' @param a Parameter for generalized VI, takes value between 0 and 2, a = 1 by default (regular loss).
 #' @return Numeric vector of length n: weighted expected VI contribution for \code{Zhat} (each element).
 #' @export
 evi.wd.contribution <- function(output_wvi, Zhat, a = 1) {
@@ -120,6 +122,7 @@ evi.wd.contribution <- function(output_wvi, Zhat, a = 1) {
 #'
 #' @param Z1 Integer or factor vector: length-n cluster labels for partition 1.
 #' @param Z2 Integer or factor vector: length-n cluster labels for partition 2.
+#' @param a Parameter for generalized VI, takes value between 0 and 2, a = 1 by default (regular loss).
 #' @return Numeric vector of length n: VI contribution for each observation.
 #' @export
 vi.contribution <- function(Z1, Z2, a = 1) {
@@ -139,6 +142,7 @@ vi.contribution <- function(Z1, Z2, a = 1) {
 #'
 #' @param Z1 Integer or factor vector: length-n cluster labels for partition 1.
 #' @param Z2 Integer or factor vector: length-n cluster labels for partition 2.
+#' @param a Parameter for generalized Binder, takes value between 0 and 2, a = 1 by default (regular loss).
 #' @return Numeric vector of length n: VI contribution for each observation.
 #' @export
 binder.contribution <- function(Z1, Z2, a = 1) {
@@ -158,6 +162,7 @@ binder.contribution <- function(Z1, Z2, a = 1) {
 #'
 #' @param output_wvi List: must contain \code{particles} (matrix) and \code{part.weights} (numeric vector).
 #' @param Zhat Integer vector: partition to compare.
+#' @param a Parameter for generalized Binder, takes value between 0 and 2, a = 1 by default (regular loss).
 #' @return Numeric vector of length n: weighted expected VI contribution for \code{Zhat} (each element).
 #' @export
 eb.wd.contribution <- function(output_wvi, Zhat, a = 1) {
@@ -181,6 +186,7 @@ eb.wd.contribution <- function(output_wvi, Zhat, a = 1) {
 #'
 #' @param Zmat Integer matrix: S rows (samples) by n columns (data points), each row a clustering.
 #' @param Zhat Integer vector: length-n partition to compare.
+#' @param a Parameter for generalized Binder, takes value between 0 and 2, a = 1 by default (regular loss).
 #' @return Numeric vector of length n: expected VI contribution for \code{Zhat} (each element).
 #' @export
 eb.contribution <- function(Zmat, Zhat, a = 1) {

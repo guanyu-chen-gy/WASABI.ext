@@ -13,10 +13,9 @@
 #'                        "+++", "topvi"),
 #'        lb = FALSE, thin.init = NULL, part.init = NULL,
 #'        method = c("salso", "average", "complete", "greedy"),
-#'        max.k = NULL, max.iter = 30, eps = 0.0001, mini.batch = 0,
+#'        max.k = NULL, max.iter = 10, eps = 0.0001, mini.batch = 200,
 #'        extra.iter = NULL,swap_countone = FALSE,suppress.comment = TRUE,
-#'        return_psm = FALSE,seed = NULL,
-#'        loss = c("VI","Binder","omARI"), a = 1, ...)
+#'        return_psm = FALSE,seed = NULL,loss = c("VI","Binder","omARI"), a = 1, ...)
 #'
 #' @param cls.draw A matrix of the MCMC samples of partitions of $n$ data points.
 #' @param L Integer, the number of particles to be used in the WASABI approximation.
@@ -35,8 +34,8 @@
 #' @param suppress.comment Logical, if TRUE, suppresses the output comments during the WASABI algorithm execution.
 #' @param return_psm Logical, if TRUE, returns the posterior similarity matrix for each particle.
 #' @param seed An optional integer to set the random seed for reproducibility. If NULL, no seed is set.
-#' @param loss loss function used, options are "VI", "Binder" and "omARI".
-#' @param a parameter used in generalization of "VI" and "Binder", with range 0-2.
+#' @param loss Loss function used for WASABI approximation, can be chosen from "VI","Binder" and "omARI".
+#' @param a Parameter for generalized VI and generalized Binder, takes value between 0 and 2, a = 1 by default (regular loss).
 #' @param ... Additional arguments passed to the salso algorithm.
 #'
 #' @return A list with elements:
@@ -85,11 +84,11 @@
 #' cls.draw = est_model$clust
 #' psm=mcclust::comp.psm(cls.draw+1)
 #' # if running WASABI once, a non-random initialization is recommended, such as "topvi" or "average"
-#' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso")
+#' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso",loss = "VI")
 #'
 #' # for larger n, it can be faster to use mini.batch
 #' out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,method.init = "topvi", method = "salso",
-#'                      mini.batch = 200, max.iter = 20, extra.iter = 10)
+#'                      mini.batch = 200, max.iter = 20, extra.iter = 10, loss = "VI")
 #' }
 WASABI <- function(cls.draw = NULL, L = 4, psm = NULL,
                    method.init = c("++", "average", "complete", "fixed", "+++", "topvi"),

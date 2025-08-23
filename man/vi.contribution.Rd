@@ -10,6 +10,8 @@ vi.contribution(Z1, Z2, a = 1)
 \item{Z1}{Integer or factor vector: length-n cluster labels for partition 1.}
 
 \item{Z2}{Integer or factor vector: length-n cluster labels for partition 2.}
+
+\item{a}{Parameter for generalized VI, takes value between 0 and 2, a = 1 by default (regular loss).}
 }
 \value{
 Numeric vector of length n: VI contribution for each observation.

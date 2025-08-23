@@ -14,6 +14,8 @@ VI_compute_Rcpp(c1, c2, K1, K2, a = 1)
 \item{K1}{An integer, specifying the number of unique clusters in \code{cl1}.}
 
 \item{K2}{An integer, specifying the number of unique clusters in \code{cl2}.}
+
+\item{a}{A parameter used in generalized VI, takes value between 0 and 2 and 1 by default.}
 }
 \value{
 The VI distance between \code{cl1} and \code{cl2}.

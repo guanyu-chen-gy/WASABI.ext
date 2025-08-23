@@ -10,6 +10,8 @@ eb.contribution(Zmat, Zhat, a = 1)
 \item{Zmat}{Integer matrix: S rows (samples) by n columns (data points), each row a clustering.}
 
 \item{Zhat}{Integer vector: length-n partition to compare.}
+
+\item{a}{Parameter for generalized Binder, takes value between 0 and 2, a = 1 by default (regular loss).}
 }
 \value{
 Numeric vector of length n: expected VI contribution for \code{Zhat} (each element).

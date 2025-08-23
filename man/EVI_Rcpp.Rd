@@ -14,6 +14,8 @@ EVI_Rcpp(cls, cls.draw, Ks, Ks.draw, a = 1)
 \item{Ks}{The number of clusters in \code{cls}}
 
 \item{Ks.draw}{A vector of $S$, containing the number of clusters for each of the MCMC samples.}
+
+\item{a}{A parameter used in generalized VI, takes value between 0 and 2 and 1 by default.}
 }
 \value{
 The posterior expected VI for the partition \code{cls}, where the posterior is approximated by the MCMC samples \code{cls.draw}. It corresponds to the average VI distance between \code{cls} and each MCMC sample in \code{cls.draw}.

@@ -14,6 +14,8 @@ Binder_Rcpp(cls1, cls2, K1s, K2s, a = 1)
 \item{K1s}{An integer vector, specifying the number of clusters in each row of \code{cls1}. Must have length equal to the number of rows in \code{cls1}.}
 
 \item{K2s}{An integer vector, specifying the number of clusters in each row of \code{cls2}. Must have length equal to the number of rows in \code{cls2}.}
+
+\item{a}{A parameter used in generalized Binder, takes value between 0 and 2 and 1 by default.}
 }
 \value{
 A matrix containing the VI distance between each row of \code{cls1} and \code{cls2}.

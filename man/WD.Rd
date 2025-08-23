@@ -21,6 +21,10 @@ WD(
 \item{part.weights}{A vector of length $L$ containing the weights associated to each of the particles.}
 
 \item{assign.vi}{A vector containing the assignment of each sample \code{cls.draw} to a region of attraction (and the corresponding particle). It is obtained as output from WASABI.}
+
+\item{loss}{Loss function used for WASABI approximation, can be chosen from "VI","Binder" and "omARI".}
+
+\item{a}{Parameter for generalized VI and generalized Binder, takes value between 0 and 2, a = 1 by default (regular loss).}
 }
 \value{
 The Wasserstein-VI distance between the empirical posterior distribution (supported on the MCMC samples) and the WASABI distribution.

@@ -4,6 +4,8 @@
 #' @param part The WASABI particles. A matrix of dimension $L × n$ containing the particles obtained by WASABI in each of the rows.
 #' @param part.weights A vector of length $L$ containing the weights associated to each of the particles.
 #' @param assign.vi A vector containing the assignment of each sample \code{cls.draw} to a region of attraction (and the corresponding particle). It is obtained as output from WASABI.
+#' @param loss Loss function used for WASABI approximation, can be chosen from "VI","Binder" and "omARI".
+#' @param a Parameter for generalized VI and generalized Binder, takes value between 0 and 2, a = 1 by default (regular loss).
 #' @return The Wasserstein-VI distance between the empirical posterior distribution (supported on the MCMC samples) and the WASABI distribution.
 #' @export
 WD <- function(cls.draw, part, part.weights, assign.vi, loss = c("VI","Binder","omARI"), a = 1) {

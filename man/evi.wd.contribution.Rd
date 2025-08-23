@@ -10,6 +10,8 @@ evi.wd.contribution(output_wvi, Zhat, a = 1)
 \item{output_wvi}{List: must contain \code{particles} (matrix) and \code{part.weights} (numeric vector).}
 
 \item{Zhat}{Integer vector: partition to compare.}
+
+\item{a}{Parameter for generalized VI, takes value between 0 and 2, a = 1 by default (regular loss).}
 }
 \value{
 Numeric vector of length n: weighted expected VI contribution for \code{Zhat} (each element).
