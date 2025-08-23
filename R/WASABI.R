@@ -165,6 +165,17 @@ WASABI <- function(cls.draw = NULL, L = 4, psm = NULL,
     stop("lower bound is only valid for VI")
   }
 
+  if (method == "greedy"){
+    if (loss == "omARI"){
+      stop("greedy method has not been implemented for loss type 'omARI'")
+    }
+    if (a != 1){
+      stop("greedy method is only valid for a = 1")
+    }
+  }
+
+
+
   cls.draw <- t(apply(cls.draw, 1, relabel_partition))
   cls.draw_relab <- cls.draw - 1
   Ks.draw <- apply(cls.draw_relab, 1, function(x) max(x)) + 1
@@ -208,26 +219,19 @@ WASABI <- function(cls.draw = NULL, L = 4, psm = NULL,
         part.evi[L] <- out$evi
     }
     if (method == "greedy") {
-      if ( a == 1 ){
-        if (loss == "VI"){
-          output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
-                                                  par =
-                                                    list(Kup = max.k, loss_type = "VI")
-          ) # initializing part is randomly sampled
-        } else if (loss == "Binder"){
-          output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
-                                                  par =
-                                                    list(Kup = max.k, loss_type = "B")
-          ) # initializing part is randomly sampled
-        } else if (loss == "omARI"){
-          stop("greedy method has not been implemented for loss type 'omARI'")
-        }
-          part[L, ] <- output_minepl$decision
-          part.evi[L] <- output_minepl$EPL
+      if (loss == "VI"){
+        output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
+                                                par =
+                                                  list(Kup = max.k, loss_type = "VI")
+        ) # initializing part is randomly sampled
+      } else if (loss == "Binder"){
+        output_minepl <- GreedyEPL::MinimiseEPL(1 + cls.draw_relab,
+                                                par =
+                                                  list(Kup = max.k, loss_type = "B")
+        ) # initializing part is randomly sampled
       }
-      else{
-        stop("greedy method has not been implemented for a != 1")
-      }
+      part[L, ] <- output_minepl$decision
+      part.evi[L] <- output_minepl$EPL
     }
     if (method == "salso") {
       if (loss == "VI"){
