@@ -14,6 +14,7 @@ Extended version for WASABI package with other loss functions. (WASABI provides 
 Authors:
 \itemize{
   \item Sara Wade \email{sara.wade@ed.ac.uk}
+  \item Guanyu Chen \email{s2761680@ed.ac.uk}
 }
 
 }
