@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{VI_compute_Rcpp}
 \alias{VI_compute_Rcpp}
-\title{Compute Variation of Information (VI) distance between two partitions}
+\title{Compute Generalized Variation of Information (VI) distance between two partitions}
 \usage{
 VI_compute_Rcpp(c1, c2, K1, K2, a = 1)
 }
@@ -18,8 +18,8 @@ VI_compute_Rcpp(c1, c2, K1, K2, a = 1)
 \item{a}{A parameter used in generalized VI, takes value between 0 and 2 and 1 by default.}
 }
 \value{
-The VI distance between \code{cl1} and \code{cl2}.
+The Generalized VI distance between \code{cl1} and \code{cl2}.
 }
 \description{
-Compute Variation of Information (VI) distance between two partitions
+Compute Generalized Variation of Information (VI) distance between two partitions
 }

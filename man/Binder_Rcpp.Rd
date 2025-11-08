@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{Binder_Rcpp}
 \alias{Binder_Rcpp}
-\title{Binder distance between two groups of partitions}
+\title{Generalized Binder distance between two groups of partitions}
 \usage{
 Binder_Rcpp(cls1, cls2, K1s, K2s, a = 1)
 }
@@ -21,5 +21,5 @@ Binder_Rcpp(cls1, cls2, K1s, K2s, a = 1)
 A matrix containing the VI distance between each row of \code{cls1} and \code{cls2}.
 }
 \description{
-Binder distance between two groups of partitions
+Generalized Binder distance between two groups of partitions
 }

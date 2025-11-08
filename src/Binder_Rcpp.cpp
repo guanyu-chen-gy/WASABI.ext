@@ -3,7 +3,7 @@
 #include <cmath>
 using namespace Rcpp;
 
-//' Compute "n-invariant version” of Binder distance between two partitions
+//' Compute Generalized "n-invariant version” of Binder distance between two partitions
 //'
 //' @param c1 An integer vector of cluster labels for $n$ items. Should be 0-indexed.
 //' @param c2 An integer vector of cluster labels for $n$ items. Should be 0-indexed.
@@ -11,6 +11,7 @@ using namespace Rcpp;
 //' @param K2 An integer, specifying the number of unique clusters in \code{cl2}.
 //' @param a A parameter used in generalized Binder, takes value between 0 and 2 and 1 by default.
 //' @return The VI distance between \code{cl1} and \code{cl2}.
+//'
 // [[Rcpp::export]]
 double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2, double a = 1.0) {
   int n=c1.length();
@@ -49,7 +50,7 @@ double Binder_compute_Rcpp(NumericVector c1, NumericVector c2, int K1, int K2, d
   return(f);
 }
 
-//' Binder distance between two groups of partitions
+//' Generalized Binder distance between two groups of partitions
 //'
 //' @param cls1 A matrix of $n$ columns, where each row contains the 0-indexed cluster labels for n items. 
 //' @param cls2 A matrix of $n$ columns, where each row contains the 0-indexed cluster labels for n items. 

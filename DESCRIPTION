@@ -4,11 +4,11 @@ Title: WASserstein Approximation for Bayesian clusterIng
 Version: 1.0
 Date: 2025-06-03
 Authors@R: c(
-    person("Cecilia", "Balocchi", role = c("aut", "cre"), email = "cecilia.balocchi@ed.ac.uk"), 
+    person("Cecilia", "Balocchi", role = "aut", email = "cecilia.balocchi@ed.ac.uk"), 
     person("Sara", "Wade", role = "aut", email = "sara.wade@ed.ac.uk"),
-    person("Guanyu","Chen", role = c("aut"), email = "s2761680@ed.ac.uk")
+    person("Guanyu","Chen", role = c("aut", "cre"), email = "s2761680@ed.ac.uk")
   )
-Description: Extended version for WASABI package with other loss functions. (WASABI provides a tool for summarizing the posterior distribution over clusterings in Bayesian mixture models. The package implements the Wasserstein Approximation for Bayesian clustering (WASABI) algorithm, which identifies multiple representative partitions (“particles”) that capture posterior uncertainty, by finding an approximation of the posterior that minimizes the Wasserstein distance based on the Variation of Information (VI) distance.)
+Description: Extended version for WASABI package with other loss functions. (WASABI provides a tool for summarizing the posterior distribution over clusterings in Bayesian mixture models. The package implements the Wasserstein Approximation for Bayesian clustering (WASABI) algorithm, which identifies multiple representative partitions (“particles”) that capture posterior uncertainty, by finding an approximation of the posterior that minimizes the Wasserstein distance based on the choice of loss function.)
 License: MIT + file LICENSE
 Imports: 
     ggplot2,

@@ -1,5 +1,7 @@
 ---
 output: github_document
+resource_files:
+  - report/Report.pdf
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -13,16 +15,16 @@ knitr::opts_chunk$set(
 )
 ```
 
-# WASABI
+# WASABI.ext
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of WASABI is to summarize the posterior distribution over the space of 
-partitions obtained after running a Bayesian mixture model. It summarizes the posterior using several point estimates. These are identified by approximating 
-the empirical posterior distribution (comprised by the posterior MCMC draws over the space of partitions) with a discrete distribution supported on these $L$ point estimates (called 'particles') in a Wasserstein sense (the Wasserstein distribution is based on the Variation of Information (VI) distance).
+The goal of WASABI.ext is to extend the WASABI framework with more novel loss functions including Generalized Variation of Information (GVI), Generalized "n-invariant" Binder's loss (GnBinder) and one-minus Adjusted Random Index (omARI).
 
 **Reference:** Balocchi, C., & Wade, S. (2025). Understanding uncertainty in Bayesian cluster analysis. [arXiv preprint arXiv:2506.16295](https://arxiv.org/abs/2506.16295v1). 
+
+Guanyu, C. Uncertainty Quantification in Bayesian Clustering (Vacation Scholarship Project Report): [View Full Report (PDF)](report/Report.pdf).
 
 ## Installation
 
@@ -30,10 +32,61 @@ You can install the development version of WASABI from [GitHub](https://github.c
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("cecilia-balocchi/WASABI")
+devtools::install_github("guanyu-chen-gy/WASABI.ext")
+```
+
+## Functions
+
+In the package, we compute the loss functions using Cpp functions to speed up and this part will demonstrate the improvement in speed compared to the developed functions in salso package.
+
+```{r, message = FALSE}
+library(WASABI.ext)
+library(microbenchmark)
+library(salso)
+```
+
+First we generate two different partitions for 10000 data points, with cluster 1 consisted of 4 clusters and cluster 2 consisted of 7 clusters.
+
+```{r}
+cls1 <- matrix(sample(0:3,10000, replace = TRUE), nrow = 1)
+cls2 <- matrix(sample(0:6,10000, replace = TRUE), nrow = 1)
+```
+
+#### Generalized VI
+
+![GVI formula](https://latex.codecogs.com/png.latex?\Large%20L_\text{GVI}(\rho_1,%20\rho_2)
+%20=%20a\sum_{j_1=1}^{K_1}%20\frac{n_{j_1,+}}{n}%20\log_{2}\!\left(\frac{n_{j_1,+}}{n}\right)
+%20+%20b\sum_{j_2=1}^{K_2}%20\frac{n_{+,j_2}}{n}%20\log_{2}\!\left(\frac{n_{+,j_2}}{n}\right)
+%20-%20(a+b)\sum_{j_1=1}^{K_1}%20\sum_{j_2=1}^{K_2}%20\frac{n_{j_1,j_2}}{n}
+%20\log_{2}\!\left(\frac{n_{j_1,j_2}%20n}{n_{j_1,+}%20n_{+,j_2}}\right).)
+
+```{r }
+microbenchmark(
+  salso = salso_loss <- salso::VI(cls1,cls2, a = 0.5),
+  cpp = WASABI.ext:::VI_compute_Rcpp(cls1, cls2, 4, 7, a = 0.5),
+  times = 100L
+)
+```
+
+#### Generalized "n-invariant" Binder's loss
+
+![GnBinder formula](https://latex.codecogs.com/png.latex?\Large%20L_{\text{GnBinder}}(\rho_1,%20\rho_2)
+%20=%20a\sum_{j_1=1}^{K_1}%20\left(\frac{n_{j_1,+}}{n}\right)^2
+%20+%20b\sum_{j_2=1}^{K_2}%20\left(\frac{n_{+,j_2}}{n}\right)^2
+%20-%20(a+b)\sum_{j_1=1}^{K_1}%20\sum_{j_2=1}^{K_2}%20\left(\frac{n_{j_1,j_2}}{n}\right)^2.)
+
+
+```{r }
+microbenchmark(
+  salso = salso_loss <- salso::binder(cls1,cls2, a = 1.2),
+  cpp = WASABI.ext:::Binder_compute_Rcpp(cls1, cls2, 4, 7, a = 1.2),
+  times = 100L
+)
 ```
 
 ## Examples
+
+We will show how the WASABI framework works on Generalized VI loss.
 
 ```{r message = FALSE}
 library(WASABI.ext)
@@ -44,106 +97,13 @@ library(superheat)
 library(ggplot2)
 ```
 
-#### Univariate data
-
-Let's first consider a simple bimodal (univariate) example:
-
-```{r}
-set.seed(12345)
-mu <- c(-1.1, 1.1)
-prop <- c(0.5, 0.5)
-n <- 600
-components <- sample(1:2, size = n, replace = TRUE, prob = prop)
-y <- rnorm(n, mean = mu[components], sd = 1)
-hist(y, breaks = 20)
-```
-
-We fit a Bayesian mixture model (you can use your own code, or a package such as BNPmix):
-
-```{r example}
-est_model <- BNPmix::PYdensity(y = y,
-                               mcmc = list(niter = 15000,
-                                           nburn = 5000,
-                                           model = "LS",
-                                           print_message = FALSE),
-                               output = list(out_type = "FULL",
-                                             out_param = TRUE))
-cls.draw = est_model$clust
-z_minVI <- salso::salso(cls.draw)
-table(z_minVI)
-```
-
-The minVI estimator is the partition with one cluster.
-
-```{r}
-psm=mcclust::comp.psm(cls.draw+1)
-superheat::superheat(psm,
-                     heat.pal = c("white", "yellow", "red"),
-                     heat.pal.values = c(0,.5,1),
-                     pretty.order.cols = TRUE,
-                     pretty.order.rows = TRUE,
-                     membership.rows = z_minVI,
-                     membership.cols = z_minVI,
-                     bottom.label.text.size = 4,
-                     left.label.text.size = 4)
-
-```
-
-However the posterior similarity matrix shows a potential two-cluster pattern, with moderate posterior uncertainty. Let's use WASABI to summarize the posterior with multiple point estimates:
-
-```{r}
-out_WASABI <- WASABI(cls.draw, psm = psm, L = 2,
-                     method.init = "++", method = "salso", loss = "VI",  a = 1.2, suppress.comment = FALSE)
-```
-
-To explore multiple initializations, we can use `WASABI_multistart`.
-We can also use the `mini.batch` option, to run the algorithm on a subset of the mcmc draws (for example: 250). When using `mini.batch` it's advisable to reduce the number of `max.iter` (for example to 10) and allow a small number of `extra.iter` that are run with the full dataset after the mini-batch part. This allows to allocate each MCMC sample in `cls.draw` to one of the particles/regions of attractions, and for the algorithm to stabilize after using mini-batch.
-
-Note, the multi-core option relies on `parallel::mclapply` which only works on MacOS and Linux. When running `WASABI_multistart` on Windows machines, set `ncores = 1` (which is also the default).
-
-```{r}
-out_WASABI_ms <- WASABI_multistart(cls.draw, psm = psm, L = 2,
-                                   multi.start = 2, ncores = 6,
-                                   mini.batch = 250,
-                                   max.iter = 10, extra.iter = 5,
-                                   method.init = "++", method = "average", loss = "omARI")
-```
-
-We should use the solution achieving the smallest Wasserstein distance (`wass.dist`):
-```{r}
-if(out_WASABI_ms$wass.dist < out_WASABI$wass.dist){
-  out_WASABI <- out_WASABI_ms
-}
-```
-
-We can now visualize the particles, and there are different options:
-
-- visualize the weight for each particle and their number of clusters
-
-```{r}
-ggsummary(out_WASABI)
-```
-
-- visualize the the range for each particle's cluster, side by side with the histogram of the data:
-
-```{r}
-ggrange_hist(out_WASABI, y)
-```
-
-- visualize the data with the particles' cluster assignment, as a scatterplot (by adding some jitter in the y-axis):
-
-```{r}
-ggscatter_grid(out_WASABI, y)
-```
-
-
-#### Two-dimensional data
+Let's consider a two-dimensional example.
 
 ```{r}
 m = 1.25
-n = 600 
-p = 2 
-Kt = 4 
+n = 600
+p = 2
+Kt = 4
 
 set.seed(4321)
 
@@ -161,12 +121,12 @@ cls.true = ind
 ```{r}
 library(ggplot2)
 ggplot() +
-  geom_point(aes(x = Y[,1], 
+  geom_point(aes(x = Y[,1],
                  y = Y[,2],
-                 colour = as.factor(cls.true), 
-                 shape  = as.factor(cls.true))) +  
+                 colour = as.factor(cls.true),
+                 shape  = as.factor(cls.true))) +
   theme_bw() + guides(colour=guide_legend(title="Cluster"),
-                      shape = guide_legend(title="Cluster")) + 
+                      shape = guide_legend(title="Cluster")) +
   xlab(expression("x"[1])) + ylab(expression("x"[2]))
 ```
 
@@ -205,24 +165,26 @@ psm=mcclust::comp.psm(cls.draw+1)
 ```
 
 Let's inspect the minVI estimator:
-  
+
 ```{r}
-z_minVI <- salso::salso(cls.draw)
+z_minVI = salso::salso(x = cls.draw, loss = VI(a = 0.9))
 table(z_minVI)
 
-df = data.frame(x1 = Y[,1], 
-                x2 = Y[,2], 
+df = data.frame(x1 = Y[,1],
+                x2 = Y[,2],
                 Cluster = z_minVI)
 df$Cluster = as.factor(df$Cluster)
 
 ggplot(df)+
-  geom_point(aes(x = x1, y = x2, color = Cluster, shape = Cluster)) + 
+  geom_point(aes(x = x1, y = x2, color = Cluster, shape = Cluster)) +
   ylab(expression("x"[2]))+xlab(expression("x"[1]))+
   theme_bw()
 ```
 
+The minVI estimator is the partition with two cluster.
+
 ```{r}
-superheat::superheat(psm, 
+superheat::superheat(psm,
                      heat.pal = c("white", "yellow", "red"),
                      heat.pal.values = c(0,.5,1),
                      pretty.order.cols = TRUE,
@@ -233,21 +195,23 @@ superheat::superheat(psm,
                      left.label.text.size = 4)
 ```
 
+However the posterior similarity matrix shows a potential four-cluster pattern, with moderate posterior uncertainty.
 
-Let's use the `elbow` function to choose the number of particles $L$ with the elbow method:
+Let's use the `elbow` function to choose the number of particles $L$ that summarizes the posterior with multiple point estimates under WASABI framework with the elbow method :
 
 ```{r run_elbow}
 set.seed(123)
 out_elbow <- elbow(cls.draw, L_max = 6, psm = psm,
                    multi.start = 1,
-                   method.init = "topvi", method = "salso")
+                   method.init = "topvi", method = "salso",
+                   loss = "VI", a  = 0.9)
 plot(out_elbow$wass_vec, type = "b", ylab = "Wass distance", xlab = "Number of particles")
 ```
 
-We can then choose $L = 3$.
+We can then choose $L = 4$.
 
 ```{r}
-L = 3
+L = 4
 output_WASABI <- out_elbow$output_list[[L]]
 ```
 
@@ -262,8 +226,11 @@ output_WASABI_mb = WASABI_multistart(cls.draw, psm,
                                     max.iter= 10, extra.iter = 5,
                                     suppress.comment=FALSE,
                                     swap_countone = TRUE,
-                                    seed = 54321)
+                                    seed = 54321,
+                                    loss = "VI", a = 0.9)
 ```
+
+We should use the solution achieving the smallest Wasserstein distance (wass.dist):
 
 ```{r}
 if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
@@ -272,10 +239,21 @@ if(output_WASABI_mb$wass.dist < output_WASABI$wass.dist){
 print(output_WASABI$wass.dist)
 ```
 
+We can now visualize the particles, and there are different options:
+
+visualize the weight for each particle
+
 ```{r}
 ggsummary(output_WASABI)
 ```
 
+visualize the the range for each particle’s cluster, side by side with the histogram of the data:
+
+```{r}
+ggrange_hist(output_WASABI, Y[,2])
+```
+
+visualize the data with the particles’ cluster assignment, as a scatterplot (by adding some jitter in the y-axis):
 
 ```{r}
 ggscatter_grid2d(output_WASABI, Y)
@@ -334,42 +312,47 @@ superheat::superheat(psm.m,
                      order.rows = tmp)
 ```
 
-We can also look at the VI contribution of each point when comparing two partitions (e.g. particle 2 and particle 3):
+We can also look at the Generalized VI contribution of each point when comparing two partitions (e.g. particle 2 and particle 3):
 
 ```{r}
-VIC_23 = vi.contribution(output_WASABI$particles[2,],output_WASABI$particles[3,])
+VI_23 = vi.contribution(output_WASABI$particles[2,],output_WASABI$particles[3,], a = 0.9)
+
+# manually specify shape codes (mix of open and filled)
+shape_values <- c(0:9, 15:20)
 
 ggplot() +
   geom_point(aes(x = Y[,1],
                  y = Y[,2],
-                 color = VIC_23,
+                 color = VI_23,
                  shape = as.factor(z_meet))) +
+  scale_shape_manual(values = shape_values) +
   theme_bw() +
-  scale_color_distiller(name = "VIC",palette = "OrRd",direction = 1)+
+  scale_color_distiller(name = "GVI",palette = "OrRd",direction = 1)+
   guides(shape = guide_legend(title="Meet\ncluster")) +
   xlab(expression("x"[1])) + ylab(expression("x"[2])) +
-  ggtitle("VI Contribution between particle 2 and 3")
+  ggtitle("Generalized VI Contribution between particle 2 and 3")
 ```
 
-Or we can inspect the Expected VI (EVI) for a given estimator, such as the meet of the particles
+Or we can inspect the Expected Generalized VI Contribution (EVI) for a given estimator, such as the meet of the particles
 
 ```{r}
-ec_full = evi.contribution(cls.draw, z_meet)
+ec_full = evi.contribution(cls.draw, z_meet, a = 0.9)
 
 data.frame(x1 = Y[,1],
            x2 = Y[,2],
-           VIC_full = ec_full,
+           GVI_full = ec_full,
            Cluster = as.factor(z_meet)) %>%
   ggplot() +
   geom_point(aes(x = x1,y = x2,
-                 color = VIC_full,
+                 color = GVI_full,
                  shape = Cluster)) +
-  scale_color_distiller("EVIC",palette = "OrRd",direction = 1)+
+  scale_shape_manual(values = shape_values) +
+  scale_color_distiller("EGVIC",palette = "OrRd",direction = 1)+
   # scale_shape_manual(values= c(18, 15,4, 8,19, 10,17))+
   theme_bw()+theme(legend.box = "horizotal") +
   guides(
     shape = guide_legend(title.position = "top", ncol = 3)
-  )+ggtitle("EVIC for the meet")
+  )+ggtitle("EGVIC for the meet")
 ```
 
 <!-- You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. -->

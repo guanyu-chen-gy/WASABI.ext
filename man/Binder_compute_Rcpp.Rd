@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{Binder_compute_Rcpp}
 \alias{Binder_compute_Rcpp}
-\title{Compute "n-invariant version” of Binder distance between two partitions}
+\title{Compute Generalized "n-invariant version” of Binder distance between two partitions}
 \usage{
 Binder_compute_Rcpp(c1, c2, K1, K2, a = 1)
 }
@@ -21,5 +21,5 @@ Binder_compute_Rcpp(c1, c2, K1, K2, a = 1)
 The VI distance between \code{cl1} and \code{cl2}.
 }
 \description{
-Compute "n-invariant version” of Binder distance between two partitions
+Compute Generalized "n-invariant version” of Binder distance between two partitions
 }
