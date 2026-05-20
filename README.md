@@ -16,10 +16,6 @@ Adjusted Random Index (omARI).
 uncertainty in Bayesian cluster analysis. [arXiv preprint
 arXiv:2506.16295](https://arxiv.org/abs/2506.16295v1).
 
-Guanyu, C. Uncertainty Quantification in Bayesian Clustering (Vacation
-Scholarship Project Report): [View Full Report
-(PDF)](report/Report.pdf).
-
 ## Installation
 
 You can install the development version of WASABI from
