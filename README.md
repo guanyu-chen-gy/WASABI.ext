@@ -68,9 +68,9 @@ microbenchmark(
 #> Warning in microbenchmark(salso = salso_loss <- salso::VI(cls1, cls2, a = 0.5),
 #> : less accurate nanosecond times to avoid potential integer overflows
 #> Unit: microseconds
-#>   expr     min      lq      mean   median      uq     max neval
-#>  salso 167.157 169.412 188.09119 177.5095 185.853 905.608   100
-#>    cpp  21.525  22.099  32.68602  25.1945  28.741 735.991   100
+#>   expr     min       lq      mean   median       uq     max neval
+#>  salso 187.575 189.4610 205.94792 196.8000 201.6585 967.067   100
+#>    cpp  23.903  24.4565  34.33996  24.9485  29.3560 705.897   100
 ```
 
 #### Generalized “n-invariant” Binder’s loss
@@ -89,9 +89,9 @@ microbenchmark(
   times = 100L
 )
 #> Unit: microseconds
-#>   expr     min       lq      mean   median      uq     max neval
-#>  salso 137.104 140.7120 148.04813 142.2085 151.577 202.868   100
-#>    cpp  21.730  29.2535  32.27643  30.2580  32.964  51.496   100
+#>   expr     min       lq      mean   median       uq     max neval
+#>  salso 154.447 157.6655 164.17384 159.9205 162.7905 237.595   100
+#>    cpp  24.149  32.3080  34.08494  32.9025  34.0505  63.673   100
 ```
 
 ## Examples
@@ -172,18 +172,18 @@ est_model <- BNPmix::PYdensity(y = Y,
                          strength = alpha,
                          discount = 0),
                        output = list(out_type = "FULL", out_param = TRUE))
-#> Completed:   1500/15000 - in 0.503769 sec
-#> Completed:   3000/15000 - in 0.963452 sec
-#> Completed:   4500/15000 - in 1.42234 sec
-#> Completed:   6000/15000 - in 2.03849 sec
-#> Completed:   7500/15000 - in 2.64382 sec
-#> Completed:   9000/15000 - in 3.32072 sec
-#> Completed:   10500/15000 - in 4.0146 sec
-#> Completed:   12000/15000 - in 4.66989 sec
-#> Completed:   13500/15000 - in 5.30318 sec
-#> Completed:   15000/15000 - in 5.96036 sec
+#> Completed:   1500/15000 - in 0.543456 sec
+#> Completed:   3000/15000 - in 1.05048 sec
+#> Completed:   4500/15000 - in 1.54593 sec
+#> Completed:   6000/15000 - in 2.19929 sec
+#> Completed:   7500/15000 - in 2.83807 sec
+#> Completed:   9000/15000 - in 3.55186 sec
+#> Completed:   10500/15000 - in 4.28749 sec
+#> Completed:   12000/15000 - in 4.98099 sec
+#> Completed:   13500/15000 - in 5.65685 sec
+#> Completed:   15000/15000 - in 6.35093 sec
 #> 
-#> Estimation done in 5.9604 seconds
+#> Estimation done in 6.35098 seconds
 cls.draw = est_model$clust
 psm=mcclust::comp.psm(cls.draw+1)
 ```
